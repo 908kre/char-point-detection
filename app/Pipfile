@@ -6,7 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+mlboard-client = "*"
 pandas = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.8"
