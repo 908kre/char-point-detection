@@ -11,6 +11,8 @@ setup(
     install_requires=[
         "pandas",
         "mlboard_client",
+        "scikit-learn",
+        "cytoolz",
     ],
     extras_require={
         'dev': [

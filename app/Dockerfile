@@ -1,6 +1,6 @@
 FROM python:3.8-slim
 RUN apt-get update \
-    && apt-get install -y inotify-tools
+    && apt-get install -y --no-install-recommends inotify-tools gcc libc-dev
 ENV MYPYPATH=/srv/stubs
 WORKDIR /srv
 COPY . .
