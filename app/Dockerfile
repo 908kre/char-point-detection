@@ -1,6 +1,7 @@
 FROM python:3.8-slim
+RUN apt-get update \
+    && apt-get install -y inotify-tools
+ENV MYPYPATH=/srv/stubs
 WORKDIR /srv
-RUN pip install --no-cache-dir pipenv
-ENV PIPENV_SYSTEM=true
 COPY . .
-RUN pipenv install
+RUN pip install -e .[dev]
