@@ -1,0 +1,6 @@
+
+preprocess:
+  ignore:
+    - 用途
+    - 改装
+    - 土地の形状
