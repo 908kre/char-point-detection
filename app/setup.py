@@ -8,6 +8,14 @@ setup(
     author_email="yao.ntno@google.com",
     license="TODO",
     packages=find_packages(),
-    install_requires=["pandas", "mlboard_client", "scikit-learn", "cytoolz",],
+    install_requires=[
+        "pandas",
+        "mlboard_client",
+        "scikit-learn",
+        "cytoolz",
+        "pyyaml",
+        "lightgbm",
+    ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
+    entry_points={"console_scripts": ["preprocess=app.cmd:main", "eda=app.cmd:eda"],},
 )

@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from app.encoders import parse_age, parse_floor, parse_quater
+from app.encoders import parse_age, parse_floor, parse_quater, parse_erea
 
 test_df = pd.read_csv("/store/data/test_data.csv")
 print(test_df.columns)
@@ -38,3 +38,10 @@ def test_parse_floor(test_input, expected):
 )
 def test_parse_query(test_input, expected):
     assert expected == parse_quater(test_input)
+
+
+@pytest.mark.parametrize(
+    "test_input,expected", [("5000㎡以上", 5000), ("24", 24),],
+)
+def test_parse_erea(test_input, expected):
+    assert expected == parse_erea(test_input)

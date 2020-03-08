@@ -1,0 +1,36 @@
+
+dataset:
+  train: /store/data/train_data.csv
+  test: /store/data/test_data.csv
+
+
+
+
+preprocess:
+  ignore:
+    - 用途
+    - 改装
+    - 土地の形状
+
+  columns:
+    種類:
+      type: categorical
+    地域:
+      type: categorical
+    市町村コード:
+      type: categorical
+    都道府県名:
+      type: categorical
+    市町村名:
+      type: categorical
+    地区名:
+      type: categorical
+    最寄駅：名称:
+      type: categorical
+    最寄駅： 距離（分）:
+      type: continuous
+    間取り:
+      type: categorical
+    面積（㎡）:
+      type: continuous
+

@@ -70,3 +70,12 @@ def parse_quater(value: str) -> t.Optional[Quater]:
         "quarter": int(res[1]),
     }
     return row
+
+
+def parse_erea(value: str) -> t.Optional[int]:
+    if not isinstance(value, str):
+        return None
+    res = re.findall(r"\d+", str(value))
+    if len(res) > 0:
+        return int(res[0])
+    return None
