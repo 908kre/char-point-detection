@@ -54,7 +54,6 @@ def parse_floor(value: str) -> Floor:
     if value == "スタジオ":
         row["room"] = 1
 
-
     if res is not None:
         number = int(res.group())
         row["room"] = number

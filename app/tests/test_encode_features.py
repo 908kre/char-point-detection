@@ -29,7 +29,16 @@ def test_parse_age(test_input, expected):
         ("１K＋S", {"dinning": 0, "kitchen": 1, "room": 1, "living": 0, "storage": 1}),
         ("１R", {"dinning": 0, "kitchen": 0, "room": 1, "living": 0, "storage": 0}),
         ("スタジオ", {"dinning": 0, "kitchen": 0, "room": 1, "living": 0, "storage": 0}),
-        (None, {"dinning": None, "kitchen": None, "room": None, "living": None, "storage": None}),
+        (
+            None,
+            {
+                "dinning": None,
+                "kitchen": None,
+                "room": None,
+                "living": None,
+                "storage": None,
+            },
+        ),
     ],
 )
 def test_parse_floor(test_input, expected):
