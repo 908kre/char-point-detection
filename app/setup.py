@@ -17,5 +17,7 @@ setup(
         "lightgbm",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
-    entry_points={"console_scripts": ["preprocess=app.cmd:main", "eda=app.cmd:eda"],},
+    entry_points={
+        "console_scripts": ["preprocess=app.cmd:preprocess", "eda=app.cmd:eda"],
+    },
 )

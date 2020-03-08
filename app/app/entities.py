@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TypedDict
+import typing as t
 
 
 class Category(Enum):
@@ -10,10 +10,16 @@ class Category(Enum):
     FarmLand = 4
 
 
-Floor = TypedDict(
+Floor = t.TypedDict(
     "Floor",
-    {"room": int, "dinning": int, "living": int, "kitchen": int, "storage": int,},
+    {
+        "room": t.Optional[int],
+        "dinning": t.Optional[int],
+        "living": t.Optional[int],
+        "kitchen": t.Optional[int],
+        "storage": t.Optional[int],
+    },
 )
 
 
-Quater = TypedDict("Quater", {"year": int, "quarter": int,})
+Quater = t.TypedDict("Quater", {"year": int, "quarter": int,})

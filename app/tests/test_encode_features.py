@@ -1,6 +1,12 @@
 import pytest
 import pandas as pd
-from app.encoders import parse_age, parse_floor, parse_quater, parse_erea
+from app.encoders import (
+    parse_age,
+    parse_floor,
+    parse_quater,
+    parse_erea,
+    parse_duration,
+)
 
 test_df = pd.read_csv("/store/data/test_data.csv")
 print(test_df.columns)
@@ -23,6 +29,7 @@ def test_parse_age(test_input, expected):
         ("１K＋S", {"dinning": 0, "kitchen": 1, "room": 1, "living": 0, "storage": 1}),
         ("１R", {"dinning": 0, "kitchen": 0, "room": 1, "living": 0, "storage": 0}),
         ("スタジオ", {"dinning": 0, "kitchen": 0, "room": 1, "living": 0, "storage": 0}),
+        (None, {"dinning": None, "kitchen": None, "room": None, "living": None, "storage": None}),
     ],
 )
 def test_parse_floor(test_input, expected):
@@ -41,7 +48,14 @@ def test_parse_query(test_input, expected):
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [("5000㎡以上", 5000), ("24", 24),],
+    "test_input,expected", [("5000㎡以上", 5000), ("24", 24), ("10m^2未満", 10),],
 )
 def test_parse_erea(test_input, expected):
     assert expected == parse_erea(test_input)
+
+
+@pytest.mark.parametrize(
+    "test_input,expected", [("11", 11), ("1H?1H30", 60), ("1H30?2H", 120),],
+)
+def test_parse_duration(test_input, expected):
+    assert expected == parse_duration(test_input)

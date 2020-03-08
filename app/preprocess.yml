@@ -1,0 +1,59 @@
+
+cache_dir: /tmp
+ignore:
+  - 用途
+  - 改装
+  - 土地の形状
+  - 市区町村コード
+
+columns:
+  種類:
+    type: categorical
+  地域:
+    type: categorical
+  市区町村コード:
+    type: categorical
+  都道府県名:
+    type: categorical
+  市区町村名:
+    type: categorical
+  地区名:
+    type: categorical
+  最寄駅：名称:
+    type: categorical
+  最寄駅：距離（分）:
+    type: continuous
+  間取り:
+    type: categorical
+  面積（㎡）:
+    type: continuous
+  土地の形状:
+    type: categorical
+  間口:
+    type: continuous
+  延床面積（㎡）:
+    type: continuous
+  建築年:
+    type: continuous
+  建物の構造:
+    type: categorical
+  用途:
+    type: categorical
+  今後の利用目的:
+    type: categorical
+  前面道路：方位:
+    type: categorical
+  前面道路：種類:
+    type: categorical
+  前面道路：幅員（ｍ）:
+    type: continuous
+  都市計画:
+    type: categorical
+  建ぺい率（％）:
+    type: continuous
+  取引時点:
+    type: continuous
+  改装:
+    type: categorical
+  取引の事情等:
+    type: categorical

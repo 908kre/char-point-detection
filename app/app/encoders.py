@@ -2,12 +2,22 @@ import typing as t
 from sklearn import preprocessing
 import numpy as np
 from .entities import Category, Floor, Quater
+from pathlib import Path
+import pickle
 import re
 
 
-def encode_label(series: t.Any) -> t.Any:
+def label_encode(series: t.Any, cache_dir: str, key: str) -> t.Any:
+    series = series.fillna("NaN")
     le = preprocessing.LabelEncoder()
-    return le.fit_transform(series)
+    fpath = Path(cache_dir).joinpath(key)
+    if fpath.exists():
+        with open(fpath, "rb") as f:
+            le.classes_ = pickle.load(f)
+    le = le.fit(series)
+    with open(fpath, "wb") as f:
+        pickle.dump(le.classes_, f)
+    return le.transform(series)
 
 
 def parse_age(value: str) -> t.Optional[int]:
@@ -23,9 +33,16 @@ def parse_age(value: str) -> t.Optional[int]:
     return None
 
 
-def parse_floor(value: str) -> t.Optional[Floor]:
-    if not isinstance(value, str):
-        return None
+def parse_floor(value: str) -> Floor:
+    if not isinstance(value, str) or (value == "オープンフロア"):
+        return {
+            "dinning": None,
+            "living": None,
+            "room": None,
+            "kitchen": None,
+            "storage": None,
+        }
+
     row: Floor = {
         "dinning": 0,
         "living": 0,
@@ -37,9 +54,6 @@ def parse_floor(value: str) -> t.Optional[Floor]:
     if value == "スタジオ":
         row["room"] = 1
 
-    # TODO
-    if value == "オープンフロア":
-        return None
 
     if res is not None:
         number = int(res.group())
@@ -79,3 +93,22 @@ def parse_erea(value: str) -> t.Optional[int]:
     if len(res) > 0:
         return int(res[0])
     return None
+
+
+def parse_duration(value: str) -> t.Optional[int]:
+    if not isinstance(value, str):
+        return None
+    res = re.findall(r"\d+H", str(value))
+    if len(res) > 0:
+        res = re.findall(r"\d+", res[-1])
+        if len(res) > 0:
+            return int(res[-1]) * 60
+
+    res = re.findall(r"\d+", str(value))
+    if len(res) > 0:
+        return int(res[0])
+    return None
+
+
+def fillna_mean(series: t.Any, *kwargs: t.Any) -> t.Any:
+    return series.fillna(series.mean())
