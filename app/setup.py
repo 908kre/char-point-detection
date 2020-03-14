@@ -22,6 +22,7 @@ setup(
         "console_scripts": [
             "preprocess=app.cmd:preprocess",
             "kfold=app.cmd:kfold",
+            "train=app.cmd:train",
             "dea=app.cmd:dea",
         ],
     },

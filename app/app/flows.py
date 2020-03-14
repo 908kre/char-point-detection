@@ -32,6 +32,7 @@ def preprocess(input_path: str, output_path: str) -> None:
             "都市計画",
             "間口",
             "改装",
+            "取引の事情等",
         ]:
             df[c] = label_encode(df[c], cache_dir="/tmp", key=c,)
 
@@ -56,8 +57,10 @@ def preprocess(input_path: str, output_path: str) -> None:
 
         if c == "建築年":
             df[c] = df[c].apply(parse_age)
+    print(df.dtypes)
     df.to_csv(output_path)
-def kfold(input_path:str, output_dir: str):
+
+def kfold(input_path:str, output_dir: str) -> None:
     df = pd.read_csv(input_path)
     for i, (train_df, test_df) in enumerate(_kfold(df)):
         train_df.to_csv(Path(output_dir).joinpath(f"train-{i}.csv"))
@@ -74,3 +77,5 @@ def dea(train_path: str, test_path: str) -> None:
     print(test_u)
     print(c)
     print(test_u - train_u)
+
+

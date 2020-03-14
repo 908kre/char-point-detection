@@ -1,6 +1,7 @@
 import yaml
 import argparse
 from . import flows
+from .train import train as _train
 
 
 def preprocess() -> None:
@@ -19,6 +20,13 @@ def kfold() -> None:
     flows.kfold(
         input_path=args.input, output_dir=args.output,
     )
+
+def train() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train", type=str, help="train file")
+    parser.add_argument("--test", type=str, help="test file")
+    args = parser.parse_args()
+    _train(args.train, args.test)
 
 
 def dea() -> None:
