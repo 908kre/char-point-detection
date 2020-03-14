@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 from .encoders import (
     parse_duration,
     parse_age,
@@ -7,16 +8,17 @@ from .encoders import (
     parse_erea,
     label_encode,
     fillna_mean,
+    kfold as _kfold,
 )
+from sklearn.model_selection import GroupKFold
 
 
-def preprocess(input_path:str, output_path:str) -> None:
+def preprocess(input_path: str, output_path: str) -> None:
     df = pd.read_csv(input_path)
     ignore_columns = ["用途", "土地の形状", "市区町村コード", "今後の利用目的"]
     df = df.drop(ignore_columns, axis="columns")
 
     for c in df.columns:
-
         if c in [
             "種類",
             "地域",
@@ -55,3 +57,20 @@ def preprocess(input_path:str, output_path:str) -> None:
         if c == "建築年":
             df[c] = df[c].apply(parse_age)
     df.to_csv(output_path)
+def kfold(input_path:str, output_dir: str):
+    df = pd.read_csv(input_path)
+    for i, (train_df, test_df) in enumerate(_kfold(df)):
+        train_df.to_csv(Path(output_dir).joinpath(f"train-{i}.csv"))
+        test_df.to_csv(Path(output_dir).joinpath(f"test-{i}.csv"))
+
+def dea(train_path: str, test_path: str) -> None:
+    train_df = pd.read_csv(train_path)
+    test_df = pd.read_csv(test_path)
+    c = "取引時点"
+    train_u = set(train_df[c].unique())
+    print(train_u)
+    test_u = set(test_df[c].unique())
+    print("------------")
+    print(test_u)
+    print(c)
+    print(test_u - train_u)

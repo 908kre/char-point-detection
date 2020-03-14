@@ -6,11 +6,10 @@ from app.encoders import (
     parse_quater,
     parse_erea,
     parse_duration,
+    kfold,
 )
 
 test_df = pd.read_csv("/store/data/test_data.csv")
-print(test_df.columns)
-print(test_df["取引時点"].unique())
 
 
 @pytest.mark.parametrize(
@@ -68,3 +67,16 @@ def test_parse_erea(test_input, expected):
 )
 def test_parse_duration(test_input, expected):
     assert expected == parse_duration(test_input)
+
+
+def test_kfold():
+    df = pd.read_csv("/store/preprocess-train_data.csv")
+    #  df = pd.DataFrame([
+    #      {"year":2018, "quarter": 2},
+    #      {"year":2018, "quarter": 2},
+    #      {"year":2018, "quarter": 2},
+    #      {"year":2018, "quarter": 2},
+    #      {"year":2018, "quarter": 2},
+    #  ])
+    kfold(df)
+    #  print(df)

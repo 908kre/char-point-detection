@@ -15,9 +15,14 @@ setup(
         "cytoolz",
         "pyyaml",
         "lightgbm",
+        "dask",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={
-        "console_scripts": ["preprocess=app.cmd:preprocess", "eda=app.cmd:eda"],
+        "console_scripts": [
+            "preprocess=app.cmd:preprocess",
+            "kfold=app.cmd:kfold",
+            "dea=app.cmd:dea",
+        ],
     },
 )
