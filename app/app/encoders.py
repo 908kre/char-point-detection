@@ -116,21 +116,24 @@ def fillna_mean(series: t.Any, *kwargs: t.Any) -> t.Any:
     return series.fillna(series.mean())
 
 
-def _union_indecies(groups:t.Dict[t.Any, t.Any], indices:t.Sequence[int]) -> t.Sequence[int]:
+def _union_indecies(
+    groups: t.Dict[t.Any, t.Any], indices: t.Sequence[int]
+) -> t.Sequence[int]:
     keys = list(groups.keys())
     return pipe(
-        indices,
-        map(lambda x: groups[keys[x]]),
-        reduce(lambda x, y: x.union(y))
+        indices, map(lambda x: groups[keys[x]]), reduce(lambda x, y: x.union(y))
     )
+
 
 def kfold(df: t.Any) -> t.Sequence[t.Tuple[t.Any, t.Any]]:
     tscv = TimeSeriesSplit(max_train_size=None, n_splits=4)
     g = df.groupby(["year", "quarter"])
     folds = []
     for train_index, test_index in tscv.split(g):
-        folds.append((
-            df.loc[_union_indecies(g.groups,train_index)],
-            df.loc[_union_indecies(g.groups,test_index)],
-        ))
+        folds.append(
+            (
+                df.loc[_union_indecies(g.groups, train_index)],
+                df.loc[_union_indecies(g.groups, test_index)],
+            )
+        )
     return folds

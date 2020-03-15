@@ -21,6 +21,7 @@ def kfold() -> None:
         input_path=args.input, output_dir=args.output,
     )
 
+
 def train() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--train", type=str, help="train file")
@@ -31,9 +32,8 @@ def train() -> None:
 
 def dea() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", type=str, help="test csv")
-    parser.add_argument("--test", type=str, help="train csv")
+    parser.add_argument("--input", type=str, help="test csv")
     args = parser.parse_args()
     flows.dea(
-        test_path=args.test, train_path=args.train,
+        path=args.input,
     )

@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+from cytoolz.curried import pipe,valfilter, valmap
 from .encoders import (
     parse_duration,
     parse_age,
@@ -10,13 +11,20 @@ from .encoders import (
     fillna_mean,
     kfold as _kfold,
 )
+import os
 from sklearn.model_selection import GroupKFold
+from mlboard_client import Writer
+
+MLBOARD_URL = os.getenv("MLBOARD_URL", "http://192.168.10.8:2020")
 
 
 def preprocess(input_path: str, output_path: str) -> None:
     df = pd.read_csv(input_path)
-    ignore_columns = ["用途", "土地の形状", "市区町村コード", "今後の利用目的"]
+    #  ignore_columns = ["用途", "種類", "土地の形状", "市区町村コード", "今後の利用目的", "id", "地域", "取引の事情等", "建ぺい率（％）", "都市計画", "建物の構造"]
+    ignore_columns = []
     df = df.drop(ignore_columns, axis="columns")
+
+
 
     for c in df.columns:
         if c in [
@@ -58,24 +66,25 @@ def preprocess(input_path: str, output_path: str) -> None:
         if c == "建築年":
             df[c] = df[c].apply(parse_age)
     print(df.dtypes)
-    df.to_csv(output_path)
+    df.to_csv(output_path, index=False)
 
-def kfold(input_path:str, output_dir: str) -> None:
+
+def kfold(input_path: str, output_dir: str) -> None:
     df = pd.read_csv(input_path)
     for i, (train_df, test_df) in enumerate(_kfold(df)):
-        train_df.to_csv(Path(output_dir).joinpath(f"train-{i}.csv"))
-        test_df.to_csv(Path(output_dir).joinpath(f"test-{i}.csv"))
-
-def dea(train_path: str, test_path: str) -> None:
-    train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
-    c = "取引時点"
-    train_u = set(train_df[c].unique())
-    print(train_u)
-    test_u = set(test_df[c].unique())
-    print("------------")
-    print(test_u)
-    print(c)
-    print(test_u - train_u)
+        train_df.to_csv(Path(output_dir).joinpath(f"train-{i}.csv"), index=False)
+        test_df.to_csv(Path(output_dir).joinpath(f"test-{i}.csv"), index=False)
 
 
+def dea(path: str) -> None:
+    df = pd.read_csv(path)
+    w = Writer(MLBOARD_URL, f"published_land_price", {
+    },)
+    for i, v in df.iterrows():
+        v = pipe(
+            v.to_dict(),
+            valfilter(lambda x: isinstance(x,int) | isinstance(x, float)),
+            valmap(lambda x: float(x))
+
+        )
+        w.add_scalars(v)
