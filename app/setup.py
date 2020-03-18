@@ -16,11 +16,12 @@ setup(
         "pyyaml",
         "lightgbm",
         "dask",
+        "joblib",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={
         "console_scripts": [
-            "preprocess=app.cmd:preprocess",
+            "pipeline=app.cmd:pipeline",
             "kfold=app.cmd:kfold",
             "train=app.cmd:train",
             "dea=app.cmd:dea",
