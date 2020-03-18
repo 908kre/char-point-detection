@@ -6,3 +6,6 @@ services:
     volumes:
       - ./app:/srv
       - ./store:/store
+    environment:
+      - KAGGLE_USERNAME
+      - KAGGLE_KEY

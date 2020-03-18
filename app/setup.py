@@ -14,17 +14,11 @@ setup(
         "scikit-learn",
         "cytoolz",
         "pyyaml",
-        "lightgbm",
-        "dask",
-        "joblib",
+        "kaggle",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={
         "console_scripts": [
-            "pipeline=app.cmd:pipeline",
-            "kfold=app.cmd:kfold",
-            "train=app.cmd:train",
-            "dea=app.cmd:dea",
         ],
     },
 )
