@@ -14,6 +14,8 @@ setup(
         "scikit-learn",
         "cytoolz",
         "pyyaml",
+        "dask",
+        "matplotlib",
         "kaggle",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
