@@ -28,7 +28,5 @@ dsk = {
     'test-plot': (save_plot, "test-load", "/store/test-plot.png"),
 }
 
-a = get(dsk, ["train-plot", "test-plot"])  # executes in parallel
-print(a)
-
-
+def main() -> None:
+    get(dsk, ["train-plot", "test-plot"])
