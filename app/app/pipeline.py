@@ -4,14 +4,6 @@ from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
 
 
-def inc(x: int) -> int:
-    return x + 1
-
-
-def add(x: int, y: int) -> int:
-    return x + y
-
-
 def load(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
