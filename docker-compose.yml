@@ -1,4 +1,4 @@
-version: '3'
+version: '2.4'
 
 services:
   app:
@@ -6,6 +6,8 @@ services:
     volumes:
       - ./app:/srv
       - ./store:/store
+    runtime: nvidia
     environment:
+      - NVIDIA_VISIBLE_DEVICES=all
       - KAGGLE_USERNAME
       - KAGGLE_KEY

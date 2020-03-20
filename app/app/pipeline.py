@@ -1,15 +1,20 @@
+from pathlib import Path
 import typing as t
 from dask.multiprocessing import get
-import seaborn as sns
 
-sns.set()
 import joblib
 import pandas as pd
 from cytoolz.curried import map, pipe
 from matplotlib.pyplot import savefig
 from concurrent.futures import ProcessPoolExecutor
 import matplotlib.pyplot as plt
+from .dataset import Dataset
 from .cache import Cache
+import seaborn as sns
+from .train import train
+
+sns.set()
+cache = Cache("/store/tmp")
 
 
 def load(path: str) -> pd.DataFrame:
@@ -41,16 +46,20 @@ def filter_df(df: pd.DataFrame, from_idx: int, to_idx: int) -> pd.DataFrame:
     return df.iloc[from_idx:to_idx]
 
 
-def main() -> None:
-    executor = ProcessPoolExecutor(max_workers=10)
-    cache = Cache("/store/tmp")
-    train_df = cache("load-train", load)("/store/data/train.csv")
-
-    chunk_size = 500
-    num_chunks = len(train_df) // chunk_size
+def eda(df: pd.DataFrame) -> None:
+    chunk_size = 10000
+    num_chunks = len(df) // chunk_size
     chunks: t.List[t.Any] = []
     for i in range(num_chunks):
-        chunk = cache(f"chunk-{i}", filter_df)(
-            train_df, i * chunk_size, (i + 1) * chunk_size
-        )
+        chunk = cache(f"chunk-{i}", filter_df)(df, i * chunk_size, (i + 1) * chunk_size)
         cache(f"plot-line-{i}", plot_line)(chunk, f"/store/plot-line-{i}.png")
+
+
+def main() -> None:
+    executor = ProcessPoolExecutor(max_workers=10)
+    train_df = cache("load-train", load)("/store/data/train.csv")
+    cache("eda-train", eda)(train_df)
+
+    chunk_size = 512 * 100
+    dataset = Dataset(train_df, window_size=256, stride=128, mode="train",)
+    train(dataset,)

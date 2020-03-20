@@ -8,6 +8,7 @@ def test_double_conv() -> None:
     y = layer(x)
     assert y.size() == (1, 12, 100)
 
+
 def test_unet() -> None:
     x = torch.randn(1, 1, 256)
     layer = UNet(in_channels=1)
