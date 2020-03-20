@@ -17,10 +17,11 @@ def load(path: str) -> pd.DataFrame:
 
 
 def plot_line(df: pd.DataFrame, path: str) -> str:
-    fig, axs = plt.subplots(2, 1)
-    axs[0].plot(df["time"], df["signal"])
-    if "open_channels" in df.columns:
-        axs[1].plot(df["time"], df["open_channels"])
+    fig, axs = plt.subplots(len(df.columns), 1, sharex=True)
+
+    for i, c in enumerate(df.columns):
+        axs[i].plot(df["time"], df[c])
+        axs[i].set_ylabel(c)
     savefig(path)
     plt.close()
     return path

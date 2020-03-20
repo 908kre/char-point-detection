@@ -17,6 +17,7 @@ setup(
         "dask",
         "matplotlib",
         "seaborn",
+        "torch",
         "kaggle",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
