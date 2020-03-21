@@ -6,6 +6,10 @@ from torch import optim
 from torch import nn
 from torch.utils.data import DataLoader
 
+device = torch.device("cuda")
+print(torch.backends.cudnn.enabled)
+print(torch.cuda.is_available())
+
 
 def train(dataset: Dataset,) -> None:
     train_loader = DataLoader(
@@ -19,7 +23,6 @@ def train(dataset: Dataset,) -> None:
     criterion = nn.MSELoss()
 
     for e in range(1000):
-        lr_scheduler.step(e)
         model.train()
         running_loss = 0.0
         for x_batch, label_batch in train_loader:
@@ -27,6 +30,6 @@ def train(dataset: Dataset,) -> None:
             with torch.set_grad_enabled(True):
                 y_batch = model(x_batch.float())
                 loss = criterion(y_batch, label_batch.float())
-                print(loss)
                 loss.backward()
                 optimizer.step()
+        lr_scheduler.step(e)
