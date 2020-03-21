@@ -1,4 +1,4 @@
-from app.models import DoubleConv, UNet
+from app.models import DoubleConv, UNet, CNet
 import torch
 
 
@@ -11,6 +11,13 @@ def test_double_conv() -> None:
 
 def test_unet() -> None:
     x = torch.randn(1, 1, 256)
-    layer = UNet(in_channels=1)
+    layer = UNet(in_channels=1, n_classes=11)
     y = layer(x)
-    assert y.size() == x.size()
+    assert y.size() == (1, 11, 256)
+
+
+def test_cnet() -> None:
+    x = torch.randn(1, 1, 256)
+    layer = CNet(in_channels=1)
+    y = layer(x)
+    assert y.size() == (1, 1)
