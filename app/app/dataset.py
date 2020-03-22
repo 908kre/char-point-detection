@@ -1,3 +1,4 @@
+import numpy as np
 import typing as t
 from torch.utils.data import Dataset as _Dataset
 
@@ -12,7 +13,6 @@ class Dataset(_Dataset):
     ) -> None:
         self.df = df
         self.mode = mode
-        self.cache: t.Dict[int, t.Any] = {}
         self.window_size = window_size
         self.stride = stride
 
@@ -21,16 +21,13 @@ class Dataset(_Dataset):
 
     def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any]:
         row = self.df.iloc[idx * self.stride : idx * self.stride + self.window_size]
-        if idx in self.cache:
-            return self.cache[idx]
         if self.mode == "train":
             res = (
-                row[["signal"]].values.transpose(),
+                row[["signal"]].values.transpose().astype(np.float32),
                 row["open_channels"].values,
             )
         else:
             res = (row[["signal"]].values.transpose(), None)
-        self.cache[idx] = res
         return res
 
 

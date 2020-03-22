@@ -19,6 +19,7 @@ setup(
         "seaborn",
         "torch",
         "kaggle",
+        "tqdm",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={"console_scripts": ["pipeline=app.pipeline:main"],},

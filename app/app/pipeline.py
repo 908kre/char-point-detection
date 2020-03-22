@@ -105,6 +105,7 @@ def main() -> None:
     executor = ProcessPoolExecutor(max_workers=10)
     train_df = cache("load-train", load)("/store/data/train.csv")
     train_df = cache("remove-drift-train", five_type_remove_drift)(train_df)
+    train_df = train_df[0:50000]
     num_chunks = 10
     chunk_size = len(train_df) // num_chunks
     chunks: t.List[t.Any] = []

@@ -6,20 +6,21 @@ import os
 import torch
 from torch import optim
 from torch import nn
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from mlboard_client import Writer
 from datetime import datetime
 from .eval import eval
-import logging
+from logging import getLogger
+from tqdm import tqdm
+
+logger = getLogger(__name__)
 
 
 Metrics = t.Dict[str, float]
 DEVICE = torch.device("cuda")
 writer = Writer(
-    "http://192.168.10.8:2020",
-    f"unet-{datetime.now()}",
-    {"test": 0},
-    logger=logging.getLogger(),
+    "http://192.168.10.8:2020", f"unet-{datetime.now()}", {"test": 0}, logger=logger,
 )
 SEED = 13
 np.random.seed(SEED)
@@ -67,37 +68,82 @@ def eval_epoch(data_loader: DataLoader, model: t.Any,) -> Metrics:
 
 
 def train(train_df: t.Any, test_df: t.Any) -> None:
-    window_size = len(train_df) // 15
-    train_loader = DataLoader(
-        Dataset(
-            train_df, window_size=window_size, stride=window_size // 3, mode="train",
+    batch_size = 256
+    window_size = 1000
+    data_loaders: DataLoaders = {
+        "train": DataLoader(
+            Dataset(train_df, window_size=window_size, stride=1, mode="train",),
+            batch_size=batch_size,
+            num_workers=16,
+            shuffle=True,
+            pin_memory=True,
         ),
-        batch_size=2,
-        shuffle=True,
+        "valid": DataLoader(
+            Dataset(train_df, window_size=window_size, stride=1, mode="train",),
+            batch_size=batch_size,
+            num_workers=16,
+            shuffle=True,
+            pin_memory=True,
+        ),
+    }
+    trainer = Trainer(
+        device=DEVICE, data_loaders=data_loaders, objective=nn.CrossEntropyLoss()
     )
-    test_loader = DataLoader(
-        Dataset(test_df, window_size=window_size, stride=window_size, mode="train"),
-        batch_size=2,
-    )
-    model = UNet(in_channels=1, n_classes=11).to(DEVICE)
-    optimizer = optim.Adam(
-        model.parameters()
-        #  model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4,
-    )
-    #  lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 0.0001)
-    criterion = nn.CrossEntropyLoss()
+    trainer.train(1000)
 
-    for e in range(1000):
-        model.train()
-        running_loss = 0.0
-        train_metrics = train_epoch(train_loader, model, optimizer, criterion,)
-        eval_metrics = eval_epoch(test_loader, model)
-        #  lr_scheduler.step(e)
-        writer.add_scalars(
-            {
-                #  "lr": lr_scheduler.get_lr()[0],  # type: ignore
-                "train_loss": train_metrics["loss"],
-                "eval_f1": eval_metrics["f1"],
-                "train_f1": train_metrics["f1"],
-            }
-        )
+
+DataLoaders = t.TypedDict("DataLoaders", {"train": DataLoader, "valid": DataLoader,})
+
+
+class Trainer:
+    def __init__(
+        self, objective: t.Any, device: t.Any, data_loaders: DataLoaders
+    ) -> None:
+        self.device = device
+        self.model = UNet(in_channels=1, n_classes=11).to(DEVICE)
+        self.optimizer = optim.Adam(self.model.parameters())
+        self.objective = objective
+        self.epoch = 1
+        self.data_loaders: DataLoaders = data_loaders
+
+    def eval_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
+        image, mask = data
+        # tta
+        output = (
+            self.model(image)
+            + torch.flip(self.model(torch.flip(image, dims=[2])), dims=[2])
+        ) / 2
+
+        loss = self.objective(output, mask)
+        pred = F.softmax(output, 1).argmax(dim=1)
+        return pred, mask, loss
+
+    def train_step(self, data: t.Any) -> t.Tuple[t.Any, t.Any, t.Any]:
+        image, mask = data
+        output = self.model(image)
+        loss = self.objective(output, mask)
+        pred = F.softmax(output, 1).argmax(dim=1)
+        return pred, mask, loss
+
+    def train_one_epoch(self) -> None:
+        self.model.train()
+        epoch_loss = 0.0
+        f1_score = 0.0
+        for img, msk in tqdm(self.data_loaders["train"]):
+            img, msk = img.to(self.device), msk.to(self.device)
+            preds, truths, loss = self.train_step((img, msk))
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+            epoch_loss += loss.item()
+            f1_score += eval(
+                preds.view(-1).cpu().numpy(), truths.view(-1).cpu().numpy()
+            )
+        epoch_loss = epoch_loss / len(self.data_loaders["train"])
+        f1_score = f1_score / len(self.data_loaders["train"])
+        logger.info(f"{epoch_loss=}, {f1_score=}")
+
+    def train(self, max_epochs: int) -> None:
+        for epoch in range(self.epoch, max_epochs + 1):
+            self.epoch = epoch
+            self.train_one_epoch()
