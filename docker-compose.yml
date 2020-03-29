@@ -8,6 +8,5 @@ services:
       - ./store:/store
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
       - KAGGLE_USERNAME
       - KAGGLE_KEY

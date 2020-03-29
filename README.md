@@ -1,4 +1,4 @@
-https://www.kaggle.com/c/liverpool-ion-switching/overview
+https://www.kaggle.com/c/imet-2020-fgvc7
 
 ```sh
 docker-compose run --rm app bash
@@ -7,6 +7,5 @@ docker-compose run --rm app bash
 dataset setup
 ```sh
 cd /store
-kaggle competitions download -c liverpool-ion-switching
-unzip liverpool-ion-switching
+kaggle competitions download -c imet-2020-fgvc7 -p dataset
 ```

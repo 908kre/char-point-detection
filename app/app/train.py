@@ -19,9 +19,7 @@ logger = getLogger(__name__)
 
 Metrics = t.Dict[str, float]
 DEVICE = torch.device("cuda")
-writer = Writer(
-    "http://192.168.10.8:2020", f"unet-{datetime.now()}", {"test": 0}, logger=logger,
-)
+writer = Writer("http://192.168.10.8:2020", logger=logger,)
 SEED = 13
 np.random.seed(SEED)
 torch.manual_seed(SEED)

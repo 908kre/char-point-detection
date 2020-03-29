@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV MYPYPATH=/srv/stubs
 ENV CUDA_VERSION 10.2.89
 ENV CUDA_PKG_VERSION 10-2=$CUDA_VERSION-1
+ENV NVIDIA_VISIBLE_DEVICES=all
 
 WORKDIR /srv
 COPY . .
