@@ -11,11 +11,15 @@ import matplotlib.pyplot as plt
 from .dataset import Dataset
 from .cache import Cache
 from sklearn.model_selection import TimeSeriesSplit
-from .trans import load_labels
+from .preprocess import load_labels, get_annotations, get_summary
 
 cache = Cache("/store/tmp")
 
 
 def eda() -> t.Any:
-    tags = cache("labels", load_labels)("/store/dataset/labels.csv")
-    print(f"{tags[0]=}")
+    labels = cache("labels", load_labels)("/store/dataset/labels.csv")
+    train_annotations = cache("train_annotations", get_annotations)(
+        "/store/dataset/train.csv", labels
+    )
+    train_summary = get_summary(train_annotations, labels)
+    print(f"{train_summary=}")
