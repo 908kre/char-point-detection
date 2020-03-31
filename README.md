@@ -20,6 +20,7 @@ solutions
 ## 1th: https://www.kaggle.com/c/imet-2019-fgvc6/discussion/94687
 ## 2th: https://www.kaggle.com/c/imet-2019-fgvc6/discussion/95223
 ## 3th: https://www.kaggle.com/c/imet-2019-fgvc6/discussion/96149
+## 4th: https://www.kaggle.com/c/imet-2019-fgvc6/discussion/94817
 ### Augmentations
 * Random crop on train and center crop on validation and test
 
