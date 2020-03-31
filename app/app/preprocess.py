@@ -61,12 +61,14 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
     top3 = pipe(
         frequencies(label_ids).items(),
         topk(3, key=lambda x: x[1]),
-        map(
-            lambda x: (
-                f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}",
-                x[1] / total_label_count,
-            )
-        ),
+        map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
+        list,
+    )
+
+    worst3 = pipe(
+        frequencies(label_ids).items(),
+        topk(3, key=lambda x: -x[1]),
+        map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
         list,
     )
     return {
@@ -78,4 +80,5 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
         "label_count_min": label_count.min(),
         "total_label_count": total_label_count,
         "top3": top3,
+        "worst3": worst3,
     }

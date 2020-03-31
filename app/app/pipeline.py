@@ -22,5 +22,5 @@ def eda() -> t.Any:
     train_annotations = cache("train_annotations", get_annotations)(
         "/store/dataset/train.csv", labels
     )
-    train_summary = get_summary(train_annotations, labels)
+    train_summary = cache("train_summary", get_summary)(train_annotations, labels)
     print(f"{train_summary=}")
