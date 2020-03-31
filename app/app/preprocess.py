@@ -48,6 +48,11 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
     label_count = pipe(
         annotations.values(), map(lambda x: len(x["label_ids"])), list, np.array
     )
+    label_hist = [
+        np.sum(label_count == 5),
+        np.sum(label_count == 4),
+        np.sum(label_count == 3),
+    ]
 
     label_ids = pipe(
         annotations.values(), mapcat(lambda x: x["label_ids"]), list, np.array,
@@ -66,6 +71,7 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
     )
     return {
         "count": count,
+        "label_hist": label_hist,
         "label_count_mean": label_count.mean(),
         "label_count_median": np.median(label_count),
         "label_count_max": label_count.max(),

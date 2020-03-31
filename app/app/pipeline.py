@@ -18,6 +18,7 @@ cache = Cache("/store/tmp")
 
 def eda() -> t.Any:
     labels = cache("labels", load_labels)("/store/dataset/labels.csv")
+    print(f"{len(labels)=}")
     train_annotations = cache("train_annotations", get_annotations)(
         "/store/dataset/train.csv", labels
     )
