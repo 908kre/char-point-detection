@@ -20,4 +20,4 @@ def test_encode_attribute() -> None:
 def test_get_annotations() -> None:
     labels = cache("labels", load_labels)("/store/dataset/labels.csv")
     res = get_annotations("/store/dataset/train.csv", labels)
-    print(res)
+    assert len(res) == 142119

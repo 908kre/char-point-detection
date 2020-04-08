@@ -20,6 +20,7 @@ class Dataset(_Dataset):
 
     def __getitem__(self, idx: int) -> t.Any:
         row = self.annotations[idx]
-        #  img = io.imread(f"{self.image_dir}/{row['id']}.png")
+        img = io.imread(f"{self.image_dir}/{row['id']}.png")
+        print(img.shape)
         print(row)
         return row
