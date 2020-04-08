@@ -1,18 +1,24 @@
 import pytest
-from app.dataset import Dataset, CDataset
+from app.dataset import Dataset
+from app.entities import Annotations
 import typing as t
 from app.cache import Cache
+from app.preprocess import load_labels, get_annotations
+
+cache = Cache("/store/tmp")
 
 
-#  @pytest.mark.parametrize("window_size, expected", [(10, 3), (15, 2), (5, 4)])
-#  def test_dataset(window_size: int, expected: int) -> None:
-#      cache = Cache("/store/tmp")
-#      df = cache("load-train", load)("/store/data/train.csv")
-#      d = Dataset(df[:20], window_size=window_size, stride=5,)
-#      assert len(d) == expected
-#      x, y = d[0]
-#      assert x.shape == (1, window_size)
-#      assert y.shape == (window_size,)
+def test_dataset() -> None:
+    labels = cache("labels", load_labels)("/store/dataset/labels.csv")
+    annotations = cache("train_annotations", get_annotations)(
+        "/store/dataset/train.csv", labels
+    )
+
+    d = Dataset(annotations)
+    assert len(d) == 142119
+    print(d[0])
+
+
 #
 #
 #  def test_dataset_total_size() -> None:

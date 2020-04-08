@@ -13,7 +13,7 @@ def load_labels(path: str) -> Labels:
     rows: Labels = dict()
     for (idx, value) in df.iterrows():
         c, d = encode_attribute(value["attribute_name"])
-        rows[str(idx)] = {"id": str(idx), "category": c, "detail": d}
+        rows[str(idx)] = {"id": idx, "category": c, "detail": d}
     return rows
 
 
@@ -22,7 +22,7 @@ def load_images(path: str, labels: Labels) -> t.Any:
     rows: t.Dict[int, Label] = dict()
     for (idx, value) in df.iterrows():
         c, d = encode_attribute(value["attribute_name"])
-        rows[idx] = {"id": str(idx), "category": c, "detail": d}
+        rows[idx] = {"id": idx, "category": c, "detail": d}
     return rows
 
 
@@ -34,29 +34,24 @@ def encode_attribute(name: str) -> t.Tuple[str, str]:
 def get_annotations(path: str, labels: Labels) -> Annotations:
     df = pd.read_csv(path)
     df["attribute_ids"] = df["attribute_ids"].apply(lambda x: x.split(" "))
-    annotations: Annotations = dict()
-    for k, vs in df.iterrows():
-        annotations[k] = {
-            "id": k,
-            "label_ids": vs["attribute_ids"],
-        }
+    annotations: Annotations = []
+    for _, vs in df.iterrows():
+        annotations.append(
+            {"id": vs["id"], "label_ids": vs["attribute_ids"],}
+        )
     return annotations
 
 
 def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
     count = len(annotations)
-    label_count = pipe(
-        annotations.values(), map(lambda x: len(x["label_ids"])), list, np.array
-    )
+    label_count = pipe(annotations, map(lambda x: len(x["label_ids"])), list, np.array)
     label_hist = {
         5: np.sum(label_count == 5),
         4: np.sum(label_count == 4),
         3: np.sum(label_count == 3),
     }
 
-    label_ids = pipe(
-        annotations.values(), mapcat(lambda x: x["label_ids"]), list, np.array,
-    )
+    label_ids = pipe(annotations, mapcat(lambda x: x["label_ids"]), list, np.array,)
     total_label_count = len(label_ids)
     top3 = pipe(
         frequencies(label_ids).items(),

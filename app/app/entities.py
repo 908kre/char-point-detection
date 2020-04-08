@@ -2,7 +2,7 @@ import typing as t
 
 
 class Label(t.TypedDict):
-    id: str
+    id: int
     category: str
     detail: str
 
@@ -12,7 +12,7 @@ Labels = t.Dict[str, Label]
 
 class Annotation(t.TypedDict):
     id: str
-    label_ids: t.Sequence[str]
+    label_ids: t.Sequence[int]
 
 
-Annotations = t.Dict[str, Annotation]
+Annotations = t.List[Annotation]

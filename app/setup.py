@@ -21,6 +21,7 @@ setup(
         "kaggle",
         "tqdm",
         "typer",
+        "scikit-image",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={"console_scripts": ["app=app.cmd:app"],},
