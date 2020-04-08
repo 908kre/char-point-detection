@@ -7,7 +7,7 @@ class Label(t.TypedDict):
     detail: str
 
 
-Labels = t.Dict[str, Label]
+Labels = t.Dict[int, Label]
 
 
 class Annotation(t.TypedDict):

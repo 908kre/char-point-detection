@@ -8,10 +8,9 @@ from cytoolz.curried import map, pipe
 from matplotlib.pyplot import savefig
 from concurrent.futures import ProcessPoolExecutor
 import matplotlib.pyplot as plt
-from .dataset import Dataset
 from .cache import Cache
 from sklearn.model_selection import TimeSeriesSplit
-from .preprocess import load_labels, get_annotations, get_summary
+from .preprocess import load_labels, get_annotations, get_summary, get_images_summary
 
 cache = Cache("/store/tmp")
 
@@ -24,6 +23,8 @@ def eda() -> t.Any:
     )
     train_summary = cache("train_summary", get_summary)(train_annotations, labels)
     print(f"{train_summary=}")
+    train_image_summary = cache("train_image_summary", get_images_summary)("/store/dataset/train")
+    print(f"{train_image_summary=}")
 
 
 def train() -> t.Any:

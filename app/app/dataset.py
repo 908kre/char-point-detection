@@ -18,9 +18,10 @@ class Dataset(_Dataset):
     def __len__(self) -> int:
         return len(self.annotations)
 
-    def __getitem__(self, idx: int) -> t.Any:
+    def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any]:
         row = self.annotations[idx]
         img = io.imread(f"{self.image_dir}/{row['id']}.png")
-        print(img.shape)
-        print(row)
-        return row
+        label = np.zeros(3474)
+        for i in row["label_ids"]:
+            label[i] = 1
+        return img, label
