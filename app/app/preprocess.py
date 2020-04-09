@@ -62,10 +62,12 @@ def get_images_summary(image_dir: str) -> t.Dict:
             else:
                 gray_count += 1
             shapes[i] = np.array(img.shape[:2])
-        aspect = shapes[:, 1] / shapes[:,0]
+        aspect = shapes[:, 1] / shapes[:, 0]
     return {
         "gray_count": gray_count,
+        "gray_ratio": gray_count / (gray_count + rgb_count),
         "rgb_count": rgb_count,
+        "rgb_ratio": rgb_count / (gray_count + rgb_count),
         "min_aspect": aspect.min(),
         "mean_aspect": aspect.mean(),
         "max_aspect": aspect.max(),

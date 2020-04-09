@@ -23,8 +23,14 @@ def eda() -> t.Any:
     )
     train_summary = cache("train_summary", get_summary)(train_annotations, labels)
     print(f"{train_summary=}")
-    train_image_summary = cache("train_image_summary", get_images_summary)("/store/dataset/train")
+    train_image_summary = cache("train_image_summary", get_images_summary)(
+        "/store/dataset/train"
+    )
     print(f"{train_image_summary=}")
+    test_image_summary = cache("test_image_summary", get_images_summary)(
+        "/store/dataset/test"
+    )
+    print(f"{test_image_summary=}")
 
 
 def train() -> t.Any:
