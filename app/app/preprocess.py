@@ -6,6 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 from skimage import io
 import glob
 from tqdm import tqdm
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from .entities import Label, Labels, Annotations
 from .dataset import Dataset
 from cytoolz.curried import unique, pipe, map, mapcat, frequencies, topk
@@ -91,16 +92,16 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
 
     label_ids = pipe(annotations, mapcat(lambda x: x["label_ids"]), list, np.array,)
     total_label_count = len(label_ids)
-    top3 = pipe(
+    top = pipe(
         frequencies(label_ids).items(),
-        topk(3, key=lambda x: x[1]),
+        topk(5, key=lambda x: x[1]),
         map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
         list,
     )
 
-    worst3 = pipe(
+    worst = pipe(
         frequencies(label_ids).items(),
-        topk(3, key=lambda x: -x[1]),
+        topk(5, key=lambda x: -x[1]),
         map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
         list,
     )
@@ -112,6 +113,28 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
         "label_count_max": label_count.max(),
         "label_count_min": label_count.min(),
         "total_label_count": total_label_count,
-        "top3": top3,
-        "worst3": worst3,
+        "top": top,
+        "worst": worst,
     }
+
+
+def kfold(
+    n_splits: int, annotations: Annotations,
+) -> t.List[t.Tuple[Annotations, Annotations]]:
+    multi_hot = to_multi_hot(annotations, size=3474)
+    indecies = range(len(multi_hot))
+    mskf = MultilabelStratifiedKFold(n_splits=n_splits, random_state=0)
+    return [
+        ([annotations[i] for i in test], [annotations[i] for i in test])
+        for train, test in mskf.split(indecies, multi_hot)
+    ]
+
+
+def to_multi_hot(annotations: Annotations, size: int) -> t.Any:
+    rows = np.zeros((len(annotations), size))
+    for i, ano in enumerate(annotations):
+        base = np.zeros(size)
+        for l in ano["label_ids"]:
+            base[l] = 1
+        rows[i] = base
+    return rows

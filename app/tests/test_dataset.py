@@ -16,6 +16,3 @@ def test_dataset() -> None:
 
     d = Dataset(annotations)
     assert len(d) == 142119
-    for i in range(len(d)):
-        img, _ = d[i]
-        print(img.shape)

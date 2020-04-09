@@ -9,8 +9,19 @@ from matplotlib.pyplot import savefig
 from concurrent.futures import ProcessPoolExecutor
 import matplotlib.pyplot as plt
 from .cache import Cache
+from .train import Trainer
+from .dataset import Dataset
 from sklearn.model_selection import TimeSeriesSplit
-from .preprocess import load_labels, get_annotations, get_summary, get_images_summary
+from .preprocess import (
+    load_labels,
+    get_annotations,
+    get_summary,
+    get_images_summary,
+    kfold,
+    to_multi_hot,
+)
+from pprint import pprint
+
 
 cache = Cache("/store/tmp")
 
@@ -38,3 +49,4 @@ def train() -> t.Any:
     train_annotations = cache("train_annotations", get_annotations)(
         "/store/dataset/train.csv", labels
     )
+    kfoled = cache("kfoled", kfold)(4, train_annotations)
