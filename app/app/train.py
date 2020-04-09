@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from mlboard_client import Writer
 from datetime import datetime
-from .eval import eval
+from .preprocess import evaluate
 from logging import getLogger
 from tqdm import tqdm
 

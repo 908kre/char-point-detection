@@ -5,6 +5,7 @@ from app.preprocess import (
     get_summary,
     get_annotations,
     to_multi_hot,
+    evaluate,
 )
 import numpy as np
 import pandas as pd
@@ -37,3 +38,15 @@ def test_to_multhot() -> None:
     ]
     res = to_multi_hot(annotations, size=3)
     assert (res != np.array([[0, 1, 0], [1, 0, 1]])).sum() == 0
+
+
+def test_evaluate() -> None:
+    pred_annotations: Annotations = [
+        {"id": "a0", "label_ids": [1]},
+    ]
+
+    gt_annotations: Annotations = [
+        {"id": "a0", "label_ids": [0, 1]},
+    ]
+    res = evaluate(pred_annotations, gt_annotations)
+    assert res == 5 / 9

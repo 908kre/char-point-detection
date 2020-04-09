@@ -6,6 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 from skimage import io
 import glob
 from tqdm import tqdm
+from sklearn.metrics import fbeta_score
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from .entities import Label, Labels, Annotations
 from .dataset import Dataset
@@ -130,7 +131,7 @@ def kfold(
     ]
 
 
-def to_multi_hot(annotations: Annotations, size: int) -> t.Any:
+def to_multi_hot(annotations: Annotations, size: int = 3474) -> t.Any:
     rows = np.zeros((len(annotations), size))
     for i, ano in enumerate(annotations):
         base = np.zeros(size)
@@ -138,3 +139,11 @@ def to_multi_hot(annotations: Annotations, size: int) -> t.Any:
             base[l] = 1
         rows[i] = base
     return rows
+
+
+def evaluate(pred: Annotations, gt: Annotations) -> float:
+    scores: t.List[float] = []
+    for p, g in zip(to_multi_hot(pred), to_multi_hot(gt)):
+        score = fbeta_score(g, p, beta=2)
+        scores.append(score)
+    return np.array(scores).mean()
