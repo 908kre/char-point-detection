@@ -111,15 +111,11 @@ class Trainer:
                 Dataset(train_data),
                 shuffle=True,
                 batch_size=32,
-                #  num_workers=8,
-                pin_memory=True,
             ),
             "test": DataLoader(
                 Dataset(test_data),
                 shuffle=False,
                 batch_size=64,
-                num_workers=4,
-                pin_memory=True,
             ),
         }
 

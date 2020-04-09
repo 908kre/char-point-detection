@@ -14,11 +14,15 @@ class Dataset(_Dataset):
             self.image_dir = "/store/dataset/train"
         else:
             self.image_dir = "/store/dataset/test"
+        self.cache:t.Dict[int, t.Any] = {}
 
     def __len__(self) -> int:
         return len(self.annotations)
 
     def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any, Annotation]:
+        if idx in self.cache:
+            return self.cache[idx]
+
         row = self.annotations[idx]
         img = io.imread(f"{self.image_dir}/{row['id']}.png")
         if len(img.shape) == 2:
@@ -33,4 +37,6 @@ class Dataset(_Dataset):
         label = np.zeros(3474)
         for i in row["label_ids"]:
             label[i] = 1
-        return img, label, row
+        res = img, label, row
+        self.cache[idx] = res
+        return res
