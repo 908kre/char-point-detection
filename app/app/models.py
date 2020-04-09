@@ -218,7 +218,6 @@ class UNet(nn.Module):
     def __init__(self, in_channels: int, n_classes: int, bilinear: bool = True) -> None:
         super(UNet, self).__init__()
         channels = np.array([64, 128, 256, 512, 1024]) // 2
-        print(channels)
         self.in_channels = in_channels
         self.bilinear = bilinear
         self.n_classes = n_classes

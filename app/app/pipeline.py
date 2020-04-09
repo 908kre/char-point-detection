@@ -49,4 +49,7 @@ def train() -> t.Any:
     train_annotations = cache("train_annotations", get_annotations)(
         "/store/dataset/train.csv", labels
     )
-    kfoled = cache("kfoled", kfold)(4, train_annotations)
+    kfolded = cache("kfolded", kfold)(4, train_annotations)
+    for i, (train_data, test_data) in enumerate(kfolded):
+        t = Trainer(train_data, test_data, f"/store/model-{i}",)
+        t.train(1000)

@@ -1,6 +1,8 @@
 import numpy as np
 import typing as t
+import os
 from .models import UNet
+from .entities import Annotations
 from .dataset import Dataset
 import os
 import torch
@@ -91,17 +93,35 @@ DEVICE = torch.device("cuda")
 #      trainer.train(1000)
 #
 #
-DataLoaders = t.TypedDict("DataLoaders", {"train": DataLoader, "valid": DataLoader,})
+DataLoaders = t.TypedDict("DataLoaders", {"train": DataLoader, "test": DataLoader,})
 #
 #
 class Trainer:
-    def __init__(self, objective: t.Any, data_loaders: DataLoaders) -> None:
+    def __init__(
+        self, test_data: Annotations, train_data: Annotations, model_path: str
+    ) -> None:
         self.device = DEVICE
         self.model = UNet(in_channels=1, n_classes=11).to(DEVICE)
         self.optimizer = optim.Adam(self.model.parameters())
-        self.objective = objective
+        self.objective = nn.CrossEntropyLoss()
         self.epoch = 1
-        self.data_loaders: DataLoaders = data_loaders
+        self.model_path = model_path
+        self.data_loaders: DataLoaders = {
+            "train": DataLoader(
+                Dataset(train_data),
+                shuffle=True,
+                batch_size=32,
+                #  num_workers=8,
+                pin_memory=True,
+            ),
+            "test": DataLoader(
+                Dataset(test_data),
+                shuffle=False,
+                batch_size=64,
+                num_workers=4,
+                pin_memory=True,
+            ),
+        }
 
     def eval_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
         image, mask = data
@@ -115,31 +135,25 @@ class Trainer:
         pred = F.softmax(output, 1).argmax(dim=1)
         return pred, mask, loss
 
-    def train_step(self, data: t.Any) -> t.Tuple[t.Any, t.Any, t.Any]:
-        image, mask = data
-        output = self.model(image)
-        loss = self.objective(output, mask)
-        pred = F.softmax(output, 1).argmax(dim=1)
-        return pred, mask, loss
-
     def train_one_epoch(self) -> None:
         self.model.train()
         epoch_loss = 0.0
         f1_score = 0.0
-        for img, msk in tqdm(self.data_loaders["train"]):
-            img, msk = img.to(self.device), msk.to(self.device)
-            preds, truths, loss = self.train_step((img, msk))
-            loss.backward()
-            self.optimizer.step()
-            self.optimizer.zero_grad()
-            epoch_loss += loss.item()
-            f1_score += eval(
-                preds.view(-1).cpu().numpy(), truths.view(-1).cpu().numpy()
-            )
-        epoch_loss = epoch_loss / len(self.data_loaders["train"])
-        f1_score = f1_score / len(self.data_loaders["train"])
-        logger.info(f"{epoch_loss=}, {f1_score=}")
+        for img, label, ano in tqdm(self.data_loaders["train"]):
+            img, label = img.to(self.device), label.to(self.device)
+            #  preds, truths, loss = self.train_step((img, msk))
+            #  loss.backward()
+            #  self.optimizer.step()
+            #  self.optimizer.zero_grad()
+            #  epoch_loss += loss.item()
+            #  f1_score += eval(
+            #      preds.view(-1).cpu().numpy(), truths.view(-1).cpu().numpy()
+            #  )
+        #  epoch_loss = epoch_loss / len(self.data_loaders["train"])
+        #  f1_score = f1_score / len(self.data_loaders["train"])
+        #  logger.info(f"{epoch_loss=}, {f1_score=}")
 
     def train(self, max_epochs: int) -> None:
         for epoch in range(self.epoch, max_epochs + 1):
             self.epoch = epoch
+            self.train_one_epoch()
