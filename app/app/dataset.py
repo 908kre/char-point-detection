@@ -39,6 +39,6 @@ class Dataset(_Dataset):
         for i in row["label_ids"]:
             label[i] = 1
         res = img, label, row
-        if pin_memory:
+        if self.pin_memory:
             self.cache[idx] = res
         return res
