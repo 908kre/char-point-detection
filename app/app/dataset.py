@@ -14,7 +14,7 @@ class Dataset(_Dataset):
             self.image_dir = "/store/dataset/train"
         else:
             self.image_dir = "/store/dataset/test"
-        self.cache:t.Dict[int, t.Any] = {}
+        self.cache: t.Dict[int, t.Any] = {}
 
     def __len__(self) -> int:
         return len(self.annotations)

@@ -1,23 +1,9 @@
-from app.models import DoubleConv, UNet, CNet
+from app.models import SCSEModule
 import torch
 
 
-def test_double_conv() -> None:
-    x = torch.randn(1, 1, 100)
-    layer = DoubleConv(in_channels=1, out_channels=12,)
+def test_scse() -> None:
+    x = torch.randn(32, 256, 320, 320)
+    layer = SCSEModule(in_channels=256, reduction=12,)
     y = layer(x)
-    assert y.size() == (1, 12, 100)
-
-
-def test_unet() -> None:
-    x = torch.randn(1, 1, 256)
-    layer = UNet(in_channels=1, n_classes=11)
-    y = layer(x)
-    #  assert y.size() == (1, 11, 256)
-
-
-def test_cnet() -> None:
-    x = torch.randn(1, 1, 256)
-    layer = CNet(in_channels=1)
-    y = layer(x)
-    assert y.size() == (1, 1)
+    assert x.shape == y.shape
