@@ -8,13 +8,14 @@ Mode = t.Literal["Test", "Train"]
 
 
 class Dataset(_Dataset):
-    def __init__(self, annotations: Annotations, mode: Mode = "Train") -> None:
+    def __init__(self, annotations: Annotations, mode: Mode = "Train", pin_memory:bool=True) -> None:
         self.annotations = annotations
         if mode == "Train":
             self.image_dir = "/store/dataset/train"
         else:
             self.image_dir = "/store/dataset/test"
         self.cache: t.Dict[int, t.Any] = {}
+        self.pin_memory = pin_memory
 
     def __len__(self) -> int:
         return len(self.annotations)
@@ -38,5 +39,6 @@ class Dataset(_Dataset):
         for i in row["label_ids"]:
             label[i] = 1
         res = img, label, row
-        self.cache[idx] = res
+        if pin_memory:
+            self.cache[idx] = res
         return res
