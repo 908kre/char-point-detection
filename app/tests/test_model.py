@@ -1,6 +1,7 @@
 import pytest
-from app.models import SCSEModule, SEResNeXt, SENextBottleneck
+from app.models import SCSEModule, SENeXt, SENextBottleneck
 import torch
+from torchsummary import summary
 
 
 def test_scse() -> None:
@@ -21,7 +22,8 @@ def test_senextbottleneck() -> None:
     assert y.shape == (1, out_channels, h, w)
 
 
-def test_seresnext() -> None:
-    x = torch.randn(16, 3, 128, 128).to("cuda")
-    model = SEResNeXt(in_channels=3, out_channels=3474, depth=2, width=1024,).to("cuda")
-    y = model(x)
+def test_senext() -> None:
+    model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64, ratio=2).to(
+        "cuda"
+    )
+    summary(model, (3, 128, 128))

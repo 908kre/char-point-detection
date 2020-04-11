@@ -144,30 +144,31 @@ class DoubleConv(nn.Module):
         return self.double_conv(x)
 
 
-class SEResNeXt(nn.Module):
+class SENeXt(nn.Module):
     def __init__(
-        self, in_channels: int, out_channels: int, depth: int, width: int
+        self, in_channels: int, out_channels: int, depth: int, width: int, ratio: float,
     ) -> None:
-        super(SEResNeXt, self).__init__()
+        super().__init__()
         self.in_conv = ConvBR2d(in_channels, width, is_activation=False)
-        diff = abs(out_channels - width)
         self.layer = nn.Sequential(
             OrderedDict(
                 {
                     f"layer-{i}": SENextBottleneck(
-                        in_channels=width + diff * (i) // depth,
-                        out_channels=width + diff * (i + 1) // depth,
-                        groups=width // depth,
+                        in_channels=int(width * ratio ** i),
+                        out_channels=int(width * ratio ** (i + 1)),
+                        stride=2,
+                        groups=int(width * ratio ** (i + 1)) // depth,
                     )
                     for i in range(depth)
                 }
             )
         )
+        self.avgpool = nn.AdaptiveAvgPool2d(3)
+        self.fc = nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels)
 
     def forward(self, x):  # type: ignore
-        print(x.shape)
         x = self.in_conv(x)
-        print(x.shape)
         x = self.layer(x)
-        print(x.shape)
+        x = self.avgpool(x).view(x.size(0), -1)
+        x = self.fc(x)
         return x

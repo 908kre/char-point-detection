@@ -23,6 +23,7 @@ setup(
         "typer",
         "scikit-image",
         "iterative-stratification",
+        "torchsummary",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={"console_scripts": ["app=app.cmd:app"],},
