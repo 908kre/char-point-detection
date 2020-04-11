@@ -3,6 +3,7 @@ import typing as t
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from collections import OrderedDict
 
 
 class SSEModule(nn.Module):
@@ -54,7 +55,7 @@ class SENextBottleneck(nn.Module):
         is_shortcut: bool = False,
     ) -> None:
         super().__init__()
-        mid_channels = out_channels // 2
+        mid_channels = groups * (out_channels // 2 // groups)
         self.conv1 = ConvBR2d(in_channels, mid_channels, 1, 0, 1,)
         self.conv2 = ConvBR2d(mid_channels, mid_channels, 3, 1, 1, groups=groups)
         self.conv3 = ConvBR2d(mid_channels, out_channels, 1, 0, 1, is_activation=False)
@@ -85,6 +86,8 @@ class SENextBottleneck(nn.Module):
                 x = F.avg_pool2d(x, self.stride, self.stride)  # avg
             x = self.shortcut(x)
 
+        print(x.shape)
+        print(s.shape)
         x = x + s
         x = F.relu(x, inplace=True)
 
@@ -144,3 +147,31 @@ class DoubleConv(nn.Module):
 
     def forward(self, x):  # type: ignore
         return self.double_conv(x)
+
+
+class SEResNeXt(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, depth: int, width: int) -> None:
+        super(SEResNeXt, self).__init__()
+        # 3 -> width
+        self.in_conv = ConvBR2d(in_channels, width, is_activation=False)
+        # 1024 - 3474
+        # depth : 3
+        diff = abs(out_channels - width)
+        self.layer = nn.Sequential(OrderedDict({
+            f"layer-{i}":SENextBottleneck(
+                in_channels=width+diff*(i)//depth,
+                out_channels=width + diff*(i + 1)//depth,
+                groups= width // depth
+            )
+            for i in range(depth)
+        }))
+
+    def forward(self, x):  # type: ignore
+        print(x.shape)
+        x = self.in_conv(x)
+        print(x.shape)
+        x = self.layer(x)
+        print(x.shape)
+        return x
+
+
