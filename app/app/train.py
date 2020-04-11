@@ -106,8 +106,8 @@ class Trainer:
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
-            "train": DataLoader(Dataset(train_data, resolution=128), shuffle=True, batch_size=32, num_workers=6),
-            "test": DataLoader(Dataset(test_data, resolution=128), shuffle=False, batch_size=32, num_workers=6),
+            "train": DataLoader(Dataset(train_data, resolution=128, pin_memory=True), shuffle=True, batch_size=32),
+            "test": DataLoader(Dataset(test_data, resolution=128, pin_memory=True), shuffle=False, batch_size=32),
         }
 
     def eval_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
