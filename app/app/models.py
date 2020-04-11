@@ -31,6 +31,7 @@ class CSEModule(nn.Module):
         x = x * self.se(x)
         return x
 
+
 class SCSEModule(nn.Module):
     def __init__(self, in_channels: int, reduction: int = 16) -> None:
         super().__init__()
@@ -52,7 +53,6 @@ class SENextBottleneck(nn.Module):
         groups: int = 32,
         reduction: int = 16,
         pool: t.Literal["max", "avg"] = "max",
-        is_shortcut: bool = False,
     ) -> None:
         super().__init__()
         mid_channels = groups * (out_channels // 2 // groups)
@@ -61,9 +61,8 @@ class SENextBottleneck(nn.Module):
         self.conv3 = ConvBR2d(mid_channels, out_channels, 1, 0, 1, is_activation=False)
         self.se = CSEModule(out_channels, reduction)
         self.stride = stride
-        self.is_shortcut = is_shortcut
-
-        if is_shortcut:
+        if in_channels != out_channels:
+            self.is_shortcut = True
             self.shortcut = ConvBR2d(
                 in_channels, out_channels, 1, 0, 1, is_activation=False
             )
@@ -80,14 +79,11 @@ class SENextBottleneck(nn.Module):
             s = self.pool(s)
         s = self.conv3(s)
         s = self.se(s)
-
+        #
         if self.is_shortcut:
             if self.stride > 1:
                 x = F.avg_pool2d(x, self.stride, self.stride)  # avg
             x = self.shortcut(x)
-
-        print(x.shape)
-        print(s.shape)
         x = x + s
         x = F.relu(x, inplace=True)
 
@@ -130,7 +126,6 @@ class ConvBR2d(nn.Module):
         return x
 
 
-
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
 
@@ -150,21 +145,24 @@ class DoubleConv(nn.Module):
 
 
 class SEResNeXt(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, depth: int, width: int) -> None:
+    def __init__(
+        self, in_channels: int, out_channels: int, depth: int, width: int
+    ) -> None:
         super(SEResNeXt, self).__init__()
-        # 3 -> width
         self.in_conv = ConvBR2d(in_channels, width, is_activation=False)
-        # 1024 - 3474
-        # depth : 3
         diff = abs(out_channels - width)
-        self.layer = nn.Sequential(OrderedDict({
-            f"layer-{i}":SENextBottleneck(
-                in_channels=width+diff*(i)//depth,
-                out_channels=width + diff*(i + 1)//depth,
-                groups= width // depth
+        self.layer = nn.Sequential(
+            OrderedDict(
+                {
+                    f"layer-{i}": SENextBottleneck(
+                        in_channels=width + diff * (i) // depth,
+                        out_channels=width + diff * (i + 1) // depth,
+                        groups=width // depth,
+                    )
+                    for i in range(depth)
+                }
             )
-            for i in range(depth)
-        }))
+        )
 
     def forward(self, x):  # type: ignore
         print(x.shape)
@@ -173,5 +171,3 @@ class SEResNeXt(nn.Module):
         x = self.layer(x)
         print(x.shape)
         return x
-
-

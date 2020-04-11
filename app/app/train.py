@@ -106,13 +106,35 @@ class Trainer:
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
-            "train": DataLoader(Dataset(train_data, resolution=128, pin_memory=True), shuffle=True, batch_size=32),
-            "test": DataLoader(Dataset(test_data, resolution=128, pin_memory=True), shuffle=False, batch_size=32),
+            "train": DataLoader(
+                Dataset(train_data, resolution=128, pin_memory=True),
+                shuffle=True,
+                batch_size=32,
+            ),
+            "test": DataLoader(
+                Dataset(test_data, resolution=128, pin_memory=True),
+                shuffle=False,
+                batch_size=32,
+            ),
         }
 
     def eval_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
         ...
         #  image, mask = data
+        # tta
+        #  output = (
+        #      self.model(image)
+        #      + torch.flip(self.model(torch.flip(image, dims=[2])), dims=[2])
+        #  ) / 2
+        #
+        #  loss = self.objective(output, mask)
+        #  pred = F.softmax(output, 1).argmax(dim=1)
+        #  return pred, mask, loss
+
+    def train_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
+        image, mask = data
+        #  self.model(image)
+        return 0, 0, 0
         # tta
         #  output = (
         #      self.model(image)
@@ -129,7 +151,7 @@ class Trainer:
         f1_score = 0.0
         for img, label, ano in tqdm(self.data_loaders["train"]):
             img, label = img.to(self.device), label.to(self.device)
-            #  preds, truths, loss = self.train_step((img, msk))
+            preds, truths, loss = self.train_step((img, label))
             #  loss.backward()
             #  self.optimizer.step()
             #  self.optimizer.zero_grad()

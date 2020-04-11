@@ -8,7 +8,13 @@ Mode = t.Literal["Test", "Train"]
 
 
 class Dataset(_Dataset):
-    def __init__(self, annotations: Annotations, mode: Mode = "Train", resolution:int=256, pin_memory:bool = False) -> None:
+    def __init__(
+        self,
+        annotations: Annotations,
+        mode: Mode = "Train",
+        resolution: int = 256,
+        pin_memory: bool = False,
+    ) -> None:
         self.annotations = annotations
         if mode == "Train":
             self.image_dir = "/store/dataset/train"
