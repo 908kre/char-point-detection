@@ -110,14 +110,16 @@ class Trainer:
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
-                Dataset(train_data, resolution=128, pin_memory=True),
+                Dataset(train_data, resolution=128, pin_memory=False),
                 shuffle=True,
                 batch_size=32,
+                num_workers=4,
             ),
             "test": DataLoader(
-                Dataset(test_data, resolution=128, pin_memory=True),
+                Dataset(test_data, resolution=128, pin_memory=False),
                 shuffle=False,
                 batch_size=32,
+                num_workers=6,
             ),
         }
         train_len = len(train_data)
