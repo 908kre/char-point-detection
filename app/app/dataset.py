@@ -42,6 +42,7 @@ class Dataset(_Dataset):
         if shape[0] > self.resolution:
             base = shape[0] // 2
             img = img[(base - half) : (base + half), :, :]
+        img = util.img_as_float(img.transpose((2, 0, 1))).astype(np.float32)
         if self.pin_memory:
             self.cache[path] = img
         return img

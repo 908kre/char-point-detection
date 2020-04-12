@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from mlboard_client import Writer
 from datetime import datetime
 from .preprocess import evaluate
+from .models import SENeXt
 from logging import getLogger
 from tqdm import tqdm
 
@@ -100,19 +101,19 @@ class Trainer:
         self, test_data: Annotations, train_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        #  self.model = UNet(in_channels=1, n_classes=11).to(DEVICE)
-        #  self.optimizer = optim.Adam(self.model.parameters())
+        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64).to(DEVICE)
+        self.optimizer = optim.Adam(self.model.parameters())
         self.objective = nn.CrossEntropyLoss()
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
-                Dataset(train_data, resolution=128, pin_memory=True),
+                Dataset(train_data, resolution=10, pin_memory=True),
                 shuffle=True,
                 batch_size=32,
             ),
             "test": DataLoader(
-                Dataset(test_data, resolution=128, pin_memory=True),
+                Dataset(test_data, resolution=10, pin_memory=True),
                 shuffle=False,
                 batch_size=32,
             ),
@@ -131,37 +132,29 @@ class Trainer:
         #  pred = F.softmax(output, 1).argmax(dim=1)
         #  return pred, mask, loss
 
-    def train_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any, t.Any]:
+    def train_step(self, data: t.Tuple[t.Any, t.Any]) -> t.Tuple[t.Any, t.Any]:
         image, mask = data
-        #  self.model(image)
-        return 0, 0, 0
-        # tta
-        #  output = (
-        #      self.model(image)
-        #      + torch.flip(self.model(torch.flip(image, dims=[2])), dims=[2])
-        #  ) / 2
-        #
-        #  loss = self.objective(output, mask)
-        #  pred = F.softmax(output, 1).argmax(dim=1)
-        #  return pred, mask, loss
+        output = self.model(image)
+        loss = self.objective(output, mask)
+        return pred, mask
 
     def train_one_epoch(self) -> None:
-        #  self.model.train()
+        self.model.train()
         epoch_loss = 0.0
         f1_score = 0.0
         for img, label, ano in tqdm(self.data_loaders["train"]):
             img, label = img.to(self.device), label.to(self.device)
             preds, truths, loss = self.train_step((img, label))
-            #  loss.backward()
-            #  self.optimizer.step()
-            #  self.optimizer.zero_grad()
-            #  epoch_loss += loss.item()
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+            epoch_loss += loss.item()
             #  f1_score += eval(
             #      preds.view(-1).cpu().numpy(), truths.view(-1).cpu().numpy()
             #  )
-        #  epoch_loss = epoch_loss / len(self.data_loaders["train"])
+        epoch_loss = epoch_loss / len(self.data_loaders["train"])
         #  f1_score = f1_score / len(self.data_loaders["train"])
-        #  logger.info(f"{epoch_loss=}, {f1_score=}")
+        logger.info(f"{epoch_loss=}")
 
     def train(self, max_epochs: int) -> None:
         for epoch in range(self.epoch, max_epochs + 1):

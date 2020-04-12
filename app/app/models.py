@@ -99,7 +99,7 @@ class ConvBR2d(nn.Module):
         padding: int = 0,
         dilation: int = 1,
         stride: int = 1,
-        groups: int = 1,
+        groups: int = 1, 
         is_activation: bool = True,
     ) -> None:
         super().__init__()
@@ -146,7 +146,7 @@ class DoubleConv(nn.Module):
 
 class SENeXt(nn.Module):
     def __init__(
-        self, in_channels: int, out_channels: int, depth: int, width: int, ratio: float,
+        self, in_channels: int, out_channels: int, depth: int, width: int, ratio: float=2.0,
     ) -> None:
         super().__init__()
         self.in_conv = ConvBR2d(in_channels, width, is_activation=False)
