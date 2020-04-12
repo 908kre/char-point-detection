@@ -120,7 +120,7 @@ class Trainer:
                 Dataset(test_data, resolution=128, ),
                 shuffle=False,
                 batch_size=32,
-                num_workers=6,
+                num_workers=4,
                 pin_memory=False,
             ),
         }
