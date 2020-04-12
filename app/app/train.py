@@ -117,7 +117,7 @@ class Trainer:
             "test": DataLoader(
                 Dataset(test_data, resolution=128, pin_memory=True),
                 shuffle=False,
-                batch_size=4,
+                batch_size=32,
             ),
         }
         train_len = len(train_data)

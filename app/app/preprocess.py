@@ -124,7 +124,7 @@ def kfold(
     indecies = range(len(multi_hot))
     mskf = MultilabelStratifiedKFold(n_splits=n_splits, random_state=0)
     return [
-        ([annotations[i] for i in test], [annotations[i] for i in test])
+        ([annotations[i] for i in train], [annotations[i] for i in test])
         for train, test in mskf.split(indecies, multi_hot)
     ]
 
