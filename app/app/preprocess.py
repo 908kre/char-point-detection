@@ -141,8 +141,6 @@ def to_multi_hot(annotations: Annotations, size: int = 3474) -> t.Any:
 
 def evaluate(preds: t.Any, gts: t.Any) -> float:
     scores: t.List[float] = []
-    preds = np.array(preds)
-    gts = np.array(gts)
     for p, g in zip(preds, gts):
         score = fbeta_score(g, p, beta=2)
         scores.append(score)

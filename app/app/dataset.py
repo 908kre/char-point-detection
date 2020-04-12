@@ -13,23 +13,18 @@ class Dataset(_Dataset):
         annotations: Annotations,
         mode: Mode = "Train",
         resolution: int = 256,
-        pin_memory: bool = False,
     ) -> None:
         self.annotations = annotations
         if mode == "Train":
             self.image_dir = "/store/dataset/train"
         else:
             self.image_dir = "/store/dataset/test"
-        self.cache: t.Dict[str, t.Any] = {}
-        self.pin_memory = pin_memory
         self.resolution = resolution
 
     def __len__(self) -> int:
         return len(self.annotations)
 
     def __get_img(self, path: str) -> t.Any:
-        if path in self.cache:
-            return self.cache[path]
 
         img = io.imread(path)
         if len(img.shape) == 2:
@@ -43,8 +38,6 @@ class Dataset(_Dataset):
             base = shape[0] // 2
             img = img[(base - half) : (base + half), :, :]
         img = util.img_as_float(img.transpose((2, 0, 1))).astype(np.float32)
-        if self.pin_memory:
-            self.cache[path] = img
         return img
 
     def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any, int]:

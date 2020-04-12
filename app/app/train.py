@@ -110,16 +110,18 @@ class Trainer:
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
-                Dataset(train_data, resolution=128, pin_memory=False),
+                Dataset(train_data, resolution=128, ),
                 shuffle=True,
                 batch_size=32,
+                pin_memory=False,
                 num_workers=4,
             ),
             "test": DataLoader(
-                Dataset(test_data, resolution=128, pin_memory=False),
+                Dataset(test_data, resolution=128, ),
                 shuffle=False,
                 batch_size=32,
                 num_workers=6,
+                pin_memory=False,
             ),
         }
         train_len = len(train_data)
@@ -130,8 +132,7 @@ class Trainer:
     def train_one_epoch(self) -> None:
         self.model.train()
         epoch_loss = 0.0
-        gts: t.List[t.Any] = []
-        preds: t.List[t.Any] = []
+        score = 0.0
         for img, label, ano in tqdm(self.data_loaders["train"]):
             img, label = img.to(self.device), label.to(self.device)
             pred = self.model(img)
@@ -139,28 +140,25 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
-            gts += label.cpu().tolist()
-            preds += (pred > 0).int().cpu().tolist()
+            score += evaluate((pred > 0).int().cpu().numpy(), label.cpu().numpy())
             epoch_loss += loss.item()
         epoch_loss = epoch_loss / len(self.data_loaders["train"])
-        score = evaluate(preds, gts)
+        score = score / len(self.data_loaders["train"])
         logger.info(f"train {epoch_loss=}")
         logger.info(f"train {score=}")
 
     def eval_one_epoch(self) -> None:
         self.model.eval()
         epoch_loss = 0.0
-        gts: t.List[t.Any] = []
-        preds: t.List[t.Any] = []
+        score = 0.0
         for img, label, idx_batch in tqdm(self.data_loaders["test"]):
             img, label = img.to(self.device), label.to(self.device)
             with torch.no_grad():
                 pred = self.model(img)
                 loss = self.objective(pred, label)
                 epoch_loss += loss.item()
-                gts += label.cpu().tolist()
-                preds += (pred > 0).int().cpu().tolist()
-        score = evaluate(preds, gts)
+                score += evaluate((pred > 0).int().cpu().numpy(), label.cpu().numpy())
+        score = score / len(self.data_loaders["train"])
         epoch_loss = epoch_loss / len(self.data_loaders["test"])
         logger.info(f"test {epoch_loss=}")
         logger.info(f"test {score=}")
