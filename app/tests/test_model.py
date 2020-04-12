@@ -1,5 +1,5 @@
 import pytest
-from app.models import SCSEModule, SENeXt, SENextBottleneck
+from app.models import SCSEModule, SENeXt, SENextBottleneck, FocalLoss
 import torch
 from torchsummary import summary
 
@@ -27,3 +27,12 @@ def test_senext() -> None:
         "cuda"
     )
     summary(model, (3, 300, 300))
+
+
+def test_focal_loss() -> None:
+    w = 128
+    model = FocalLoss(logits=True).to("cuda")
+    inputs = torch.randn(1, w)
+    targets = torch.randn(1, w)
+    y = model(inputs, targets)
+    print(y)

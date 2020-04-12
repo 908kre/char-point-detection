@@ -8,7 +8,7 @@ import glob
 from tqdm import tqdm
 from sklearn.metrics import fbeta_score
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
-from .entities import Label, Labels, Annotations
+from .entities import Label, Labels, Annotations, Annotation
 from .dataset import Dataset
 from cytoolz.curried import unique, pipe, map, mapcat, frequencies, topk
 import seaborn as sns
@@ -21,17 +21,17 @@ def load_labels(path: str) -> Labels:
     rows: Labels = dict()
     for (idx, value) in df.iterrows():
         c, d = encode_attribute(value["attribute_name"])
-        rows[idx] = {"id": idx, "category": c, "detail": d}
+        rows[idx] = Label(idx, c, d)
     return rows
 
 
-def load_images(path: str, labels: Labels) -> t.Any:
-    df = pd.read_csv(path)
-    rows: t.Dict[int, Label] = dict()
-    for (idx, value) in df.iterrows():
-        c, d = encode_attribute(value["attribute_name"])
-        rows[idx] = {"id": idx, "category": c, "detail": d}
-    return rows
+# ]  def load_images(path: str, labels: Labels) -> t.Any:
+#      df = pd.read_csv(path)
+#      rows: t.Dict[int, Label] = dict()
+#      for (idx, value) in df.iterrows():
+#          c, d = encode_attribute(value["attribute_name"])
+#          rows[idx] = {"id": idx, "category": c, "detail": d}
+#      return rows
 
 
 def encode_attribute(name: str) -> t.Tuple[str, str]:
@@ -46,9 +46,7 @@ def get_annotations(path: str, labels: Labels) -> Annotations:
     )
     annotations: Annotations = []
     for _, vs in df.iterrows():
-        annotations.append(
-            {"id": vs["id"], "label_ids": vs["attribute_ids"],}
-        )
+        annotations.append(Annotation(vs["id"], vs["attribute_ids"]))
     return annotations
 
 
@@ -96,14 +94,14 @@ def get_summary(annotations: Annotations, labels: Labels) -> t.Any:
     top = pipe(
         frequencies(label_ids).items(),
         topk(5, key=lambda x: x[1]),
-        map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
+        map(lambda x: (f"{labels[x[0]].category}::{labels[x[0]].detail}", x[1],)),
         list,
     )
 
     worst = pipe(
         frequencies(label_ids).items(),
         topk(5, key=lambda x: -x[1]),
-        map(lambda x: (f"{labels[x[0]]['category']}::{labels[x[0]]['detail']}", x[1],)),
+        map(lambda x: (f"{labels[x[0]].category}::{labels[x[0]].detail}", x[1],)),
         list,
     )
     return {
@@ -135,15 +133,15 @@ def to_multi_hot(annotations: Annotations, size: int = 3474) -> t.Any:
     rows = np.zeros((len(annotations), size))
     for i, ano in enumerate(annotations):
         base = np.zeros(size)
-        for l in ano["label_ids"]:
+        for l in ano.label_ids:
             base[l] = 1
         rows[i] = base
     return rows
 
 
-def evaluate(pred: Annotations, gt: Annotations) -> float:
+def evaluate(preds: t.Any, gts: t.Any) -> float:
     scores: t.List[float] = []
-    for p, g in zip(to_multi_hot(pred), to_multi_hot(gt)):
+    for p, g in zip(preds, gts):
         score = fbeta_score(g, p, beta=2)
         scores.append(score)
     return np.array(scores).mean()

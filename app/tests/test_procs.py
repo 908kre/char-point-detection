@@ -10,7 +10,7 @@ from app.preprocess import (
 import numpy as np
 import pandas as pd
 from app.cache import Cache
-from app.entities import Annotations
+from app.entities import Annotations, Annotation
 
 cache = Cache("/store/tmp")
 
@@ -32,21 +32,13 @@ def test_get_annotations() -> None:
 
 
 def test_to_multhot() -> None:
-    annotations: Annotations = [
-        {"id": "a0", "label_ids": [1]},
-        {"id": "a1", "label_ids": [0, 2]},
-    ]
+    annotations: Annotations = [Annotation("a0", [1]), Annotation("a1", [0, 2])]
     res = to_multi_hot(annotations, size=3)
     assert (res != np.array([[0, 1, 0], [1, 0, 1]])).sum() == 0
 
 
 def test_evaluate() -> None:
-    pred_annotations: Annotations = [
-        {"id": "a0", "label_ids": [1]},
-    ]
-
-    gt_annotations: Annotations = [
-        {"id": "a0", "label_ids": [0, 1]},
-    ]
-    res = evaluate(pred_annotations, gt_annotations)
+    preds = [[0, 1]]
+    gts = [[0, 1]]
+    res = evaluate(preds, gts)
     assert res == 5 / 9

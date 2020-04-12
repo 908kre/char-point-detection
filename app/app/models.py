@@ -6,6 +6,34 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
+class FocalLoss(nn.Module):
+    def __init__(
+        self,
+        alpha: float = 1,
+        gamma: float = 2,
+        logits: bool = False,
+        reduce: bool = True,
+    ) -> None:
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.logits = logits
+        self.reduce = reduce
+
+    def forward(self, inputs, targets):  # type:ignore
+        if self.logits:
+            BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduce=False)
+        else:
+            BCE_loss = F.binary_cross_entropy(inputs, targets, reduce=False)
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
+
+        if self.reduce:
+            return torch.mean(F_loss)
+        else:
+            return F_loss
+
+
 class SSEModule(nn.Module):
     def __init__(self, in_channels: int) -> None:
         super().__init__()
@@ -99,7 +127,7 @@ class ConvBR2d(nn.Module):
         padding: int = 0,
         dilation: int = 1,
         stride: int = 1,
-        groups: int = 1, 
+        groups: int = 1,
         is_activation: bool = True,
     ) -> None:
         super().__init__()
@@ -146,7 +174,12 @@ class DoubleConv(nn.Module):
 
 class SENeXt(nn.Module):
     def __init__(
-        self, in_channels: int, out_channels: int, depth: int, width: int, ratio: float=2.0,
+        self,
+        in_channels: int,
+        out_channels: int,
+        depth: int,
+        width: int,
+        ratio: float = 2.0,
     ) -> None:
         super().__init__()
         self.in_conv = ConvBR2d(in_channels, width, is_activation=False)

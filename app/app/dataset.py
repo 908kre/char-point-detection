@@ -47,11 +47,10 @@ class Dataset(_Dataset):
             self.cache[path] = img
         return img
 
-    def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any, Annotation]:
+    def __getitem__(self, idx: int) -> t.Tuple[t.Any, t.Any, int]:
         row = self.annotations[idx]
-
         label = np.zeros(3474)
-        for i in row["label_ids"]:
+        for i in row.label_ids:
             label[i] = 1
-        img = self.__get_img(f"{self.image_dir}/{row['id']}.png")
-        return img, label, row
+        img = self.__get_img(f"{self.image_dir}/{row.id}.png")
+        return img, label, idx
