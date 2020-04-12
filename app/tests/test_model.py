@@ -26,4 +26,4 @@ def test_senext() -> None:
     model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64, ratio=2).to(
         "cuda"
     )
-    summary(model, (3, 128, 128))
+    summary(model, (3, 300, 300))
