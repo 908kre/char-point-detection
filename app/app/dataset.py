@@ -24,10 +24,7 @@ to_tensor = ToTensor()
 
 class Dataset(_Dataset):
     def __init__(
-        self,
-        annotations: Annotations,
-        resolution: int = 320,
-        mode: Mode = "Train",
+        self, annotations: Annotations, resolution: int = 320, mode: Mode = "Train",
     ) -> None:
         self.annotations = annotations
         self.mode = mode
@@ -39,7 +36,9 @@ class Dataset(_Dataset):
 
     def transform(self, img: t.Any) -> t.Any:
         max_hw = max(img.shape[0:2])
-        img = PadIfNeeded(max_hw, max_hw, border_mode=cv2.BORDER_REPLICATE)(image=img)["image"]
+        img = PadIfNeeded(max_hw, max_hw, border_mode=cv2.BORDER_REPLICATE)(image=img)[
+            "image"
+        ]
 
         if self.mode == "Train":
             img = Cutout(p=0.2)(image=img)["image"]
