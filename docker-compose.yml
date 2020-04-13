@@ -7,7 +7,7 @@ services:
       - ./app:/srv
       - ./store:/store
     runtime: nvidia
-    shm_size: '24gb'
+    shm_size: '16gb'
     environment:
       - KAGGLE_USERNAME
       - KAGGLE_KEY
