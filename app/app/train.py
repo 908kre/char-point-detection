@@ -38,12 +38,12 @@ class Trainer:
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
-                Dataset(train_data, resolution=256, mode="Train",),
+                Dataset(train_data, resolution=128, mode="Train",),
                 shuffle=True,
                 batch_size=32,
             ),
             "test": DataLoader(
-                Dataset(test_data, resolution=300, mode="Test",),
+                Dataset(test_data, resolution=128, mode="Test",),
                 shuffle=False,
                 batch_size=32,
             ),

@@ -29,7 +29,7 @@ def test_dataset() -> None:
 def test_transform(id: str, mode: Mode) -> None:
     annotations = [Annotation(id, [])]
 
-    dataset = Dataset(annotations, mode=mode,)
+    dataset = Dataset(annotations, mode=mode,resolution=128)
     for i in range(10):
         img, _ = dataset[0]
         save_image(img, f"/store/tmp/aug_{id}_{i}.png")
