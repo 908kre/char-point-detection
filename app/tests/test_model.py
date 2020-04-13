@@ -30,9 +30,8 @@ def test_senext() -> None:
 
 
 def test_focal_loss() -> None:
-    w = 128
-    model = FocalLoss(logits=True).to("cuda")
-    inputs = torch.randn(1, w)
-    targets = torch.randn(1, w)
+    w = 5
+    model = FocalLoss()
+    inputs = torch.tensor([1, 1, 1]).float()
+    targets = torch.tensor([1, 1, 1]).float()
     y = model(inputs, targets)
-    print(y)

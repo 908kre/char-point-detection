@@ -105,7 +105,7 @@ class Trainer:
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
-        self.objective = FocalLoss(logits=True)
+        self.objective = FocalLoss()
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
@@ -113,7 +113,6 @@ class Trainer:
                 Dataset(train_data, resolution=128, ),
                 shuffle=True,
                 batch_size=32,
-                pin_memory=False,
                 num_workers=4,
             ),
             "test": DataLoader(
@@ -121,7 +120,6 @@ class Trainer:
                 shuffle=False,
                 batch_size=32,
                 num_workers=4,
-                pin_memory=False,
             ),
         }
         train_len = len(train_data)
@@ -136,11 +134,11 @@ class Trainer:
         for img, label, ano in tqdm(self.data_loaders["train"]):
             img, label = img.to(self.device), label.to(self.device)
             pred = self.model(img)
-            loss = self.objective(pred, label)
+            loss = self.objective(pred, label.float())
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
-            score += evaluate((pred > 0).int().cpu().numpy(), label.cpu().numpy())
+            score += evaluate((pred > 0.5).int().cpu().numpy(), label.cpu().numpy())
             epoch_loss += loss.item()
         epoch_loss = epoch_loss / len(self.data_loaders["train"])
         score = score / len(self.data_loaders["train"])
@@ -155,9 +153,9 @@ class Trainer:
             img, label = img.to(self.device), label.to(self.device)
             with torch.no_grad():
                 pred = self.model(img)
-                loss = self.objective(pred, label)
+                loss = self.objective(pred, label.float())
                 epoch_loss += loss.item()
-                score += evaluate((pred > 0).int().cpu().numpy(), label.cpu().numpy())
+                score += evaluate((pred > 0.5).int().cpu().numpy(), label.cpu().numpy())
         score = score / len(self.data_loaders["train"])
         epoch_loss = epoch_loss / len(self.data_loaders["test"])
         logger.info(f"test {epoch_loss=}")

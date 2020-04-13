@@ -9,22 +9,16 @@ from collections import OrderedDict
 class FocalLoss(nn.Module):
     def __init__(
         self,
-        alpha: float = 1,
-        gamma: float = 2,
-        logits: bool = False,
+        alpha: float = 1, gamma: float = 2,
         reduce: bool = True,
     ) -> None:
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
-        self.logits = logits
         self.reduce = reduce
 
     def forward(self, inputs, targets):  # type:ignore
-        if self.logits:
-            BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduce=False)
-        else:
-            BCE_loss = F.binary_cross_entropy(inputs, targets, reduce=False)
+        BCE_loss = F.binary_cross_entropy(inputs, targets, reduce=False)
         pt = torch.exp(-BCE_loss)
         F_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
 
@@ -197,7 +191,10 @@ class SENeXt(nn.Module):
             )
         )
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc = nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels)
+        self.fc = nn.Sequential(
+            nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels),
+            nn.Sigmoid(),
+        )
 
     def forward(self, x):  # type: ignore
         x = self.in_conv(x)
