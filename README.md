@@ -8,6 +8,10 @@ dataset setup
 ```sh
 cd /store
 kaggle competitions download -c imet-2020-fgvc7 -p dataset
+cd dataset
+mkdir images
+find train -name '*.png' | xargs mv --target-directory=images
+find test -name '*.png' | xargs mv --target-directory=images
 ```
 # idea
 

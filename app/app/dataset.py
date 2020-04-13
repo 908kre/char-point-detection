@@ -20,14 +20,14 @@ to_tensor = ToTensor()
 
 class Dataset(_Dataset):
     def __init__(
-        self, annotations: Annotations, resolution: int = 256, mode: Mode = "Train",
+        self,
+        annotations: Annotations,
+        resolution: int = 256,
+        mode: Mode = "Train",
     ) -> None:
         self.annotations = annotations
         self.mode = mode
-        if mode == "Train":
-            self.image_dir = "/store/dataset/train"
-        else:
-            self.image_dir = "/store/dataset/test"
+        self.image_dir = "/store/dataset/images"
         self.resolution = resolution
 
     def __len__(self) -> int:
@@ -48,7 +48,6 @@ class Dataset(_Dataset):
         return img
 
     def __get_img(self, path: str) -> t.Any:
-
         img = io.imread(path)
         if len(img.shape) == 2:
             img = color.gray2rgb(img)

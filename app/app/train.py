@@ -40,12 +40,14 @@ class Trainer:
             "train": DataLoader(
                 Dataset(train_data, resolution=128, mode="Train",),
                 shuffle=True,
-                batch_size=32,
+                batch_size=64,
+                num_workers=2,
             ),
             "test": DataLoader(
                 Dataset(test_data, resolution=128, mode="Test",),
                 shuffle=False,
-                batch_size=32,
+                batch_size=64,
+                num_workers=2,
             ),
         }
         train_len = len(train_data)
