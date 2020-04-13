@@ -8,9 +8,7 @@ from collections import OrderedDict
 
 class FocalLoss(nn.Module):
     def __init__(
-        self,
-        alpha: float = 1, gamma: float = 2,
-        reduce: bool = True,
+        self, alpha: float = 1, gamma: float = 2, reduce: bool = True,
     ) -> None:
         super(FocalLoss, self).__init__()
         self.alpha = alpha
@@ -192,8 +190,7 @@ class SENeXt(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc = nn.Sequential(
-            nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels),
-            nn.Sigmoid(),
+            nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels), nn.Sigmoid(),
         )
 
     def forward(self, x):  # type: ignore

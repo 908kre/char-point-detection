@@ -51,5 +51,7 @@ def train() -> t.Any:
     )
     kfolded = cache("kfolded", kfold)(4, train_annotations)
     for i, (train_data, test_data) in enumerate(kfolded):
-        t = Trainer(train_data=train_data, test_data=test_data, model_path=f"/store/model-{i}",)
+        t = Trainer(
+            train_data=train_data, test_data=test_data, model_path=f"/store/model-{i}",
+        )
         t.train(1000)
