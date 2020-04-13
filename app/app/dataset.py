@@ -3,12 +3,16 @@ import typing as t
 from torch.utils.data import Dataset as _Dataset
 from skimage import io, transform, color, util
 from .entities import Annotations, Annotation
+import cv2
 from albumentations.augmentations.transforms import (
     RandomResizedCrop,
     HorizontalFlip,
     CenterCrop,
     Resize,
     PadIfNeeded,
+    RandomBrightnessContrast,
+    RandomGamma,
+    Cutout,
 )
 from torchvision.transforms import ToTensor
 
@@ -22,7 +26,7 @@ class Dataset(_Dataset):
     def __init__(
         self,
         annotations: Annotations,
-        resolution: int = 256,
+        resolution: int = 320,
         mode: Mode = "Train",
     ) -> None:
         self.annotations = annotations
@@ -35,13 +39,17 @@ class Dataset(_Dataset):
 
     def transform(self, img: t.Any) -> t.Any:
         max_hw = max(img.shape[0:2])
-        img = PadIfNeeded(max_hw, max_hw)(image=img)["image"]
+        img = PadIfNeeded(max_hw, max_hw, border_mode=cv2.BORDER_REPLICATE)(image=img)["image"]
 
         if self.mode == "Train":
+            img = Cutout(p=0.2)(image=img)["image"]
             img = RandomResizedCrop(self.resolution, self.resolution, scale=(0.5, 1))(
                 image=img
             )["image"]
             img = HorizontalFlip()(image=img)["image"]
+            img = RandomBrightnessContrast(p=0.3)(image=img)["image"]
+            img = RandomGamma(gamma_limit=(95, 105), p=0.3)(image=img)["image"]
+
         else:
             img = Resize(self.resolution, self.resolution)(image=img)["image"]
         img = ToTensor()(img)
