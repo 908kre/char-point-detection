@@ -89,28 +89,25 @@ class Trainer:
 
         preds = np.concatenate(preds)
         labels = np.concatenate(labels)
-        print(preds.shape)
-        print(labels.shape)
-        executor = futures.ProcessPoolExecutor()
+        executor = futures.ProcessPoolExecutor(max_workers=3)
         thresholds = [0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15]
-        futs = [
+        futs, _ = futures.wait([
             executor.submit(evaluate, preds, labels, t)
             for t
             in thresholds
-        ]
-        #  th_scores = {}
-        for t, v in zip(thresholds, futures.wait(futs)):
-            print(t, v)
-            #  th_scores[t] = v
+        ])
+        th_scores = {}
+        for t, fut in zip(thresholds, futs):
+            th_scores[t] = fut.result()
 
         epoch = self.epoch
-        #  threshold, score = max(th_scores.items(), key=lambda x: x[1])
-        #  logger.info(f"{epoch=} test {score=} {threshold=}")
+        threshold, score = max(th_scores.items(), key=lambda x: x[1])
+        logger.info(f"{epoch=} test {score=} {threshold=}")
         epoch_loss = epoch_loss / len(self.data_loaders["test"])
         logger.info(f"{epoch=} test {epoch_loss=}")
 
     def train(self, max_epochs: int) -> None:
         for epoch in range(self.epoch, max_epochs + 1):
             self.epoch = epoch
-            #  self.train_one_epoch()
+            self.train_one_epoch()
             self.eval_one_epoch()
