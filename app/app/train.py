@@ -33,8 +33,8 @@ class Trainer:
         self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64).to(
             DEVICE
         )
-        self.optimizer = optim.Adam(self.model.parameters())
-        self.objective = nn.BCELoss()
+        self.optimizer = optim.AdamW(self.model.parameters())
+        self.objective = nn.BCELoss(reduction="none")
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
@@ -64,6 +64,7 @@ class Trainer:
             img, label = img.to(self.device), label.to(self.device)
             pred = self.model(img)
             loss = self.objective(pred, label.float())
+            loss = loss.sum() / loss.shape[0]
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -74,6 +75,7 @@ class Trainer:
 
     def eval_one_epoch(self) -> None:
         self.model.eval()
+        epoch = self.epoch
         epoch_loss = 0.0
         score = 0.0
         preds:t.Any = []
@@ -83,9 +85,13 @@ class Trainer:
             with torch.no_grad():
                 pred = self.model(img)
                 loss = self.objective(pred, label.float())
-                epoch_loss += loss.item()
+                loss = loss.sum() / loss.shape[0]
                 preds.append(pred.cpu().numpy())
                 labels.append(label.cpu().numpy())
+                epoch_loss += loss.item()
+
+        epoch_loss = epoch_loss / len(self.data_loaders["test"])
+        logger.info(f"{epoch=} test {epoch_loss=}")
 
         preds = np.concatenate(preds)
         labels = np.concatenate(labels)
@@ -100,11 +106,8 @@ class Trainer:
         for t, fut in zip(thresholds, futs):
             th_scores[t] = fut.result()
 
-        epoch = self.epoch
         threshold, score = max(th_scores.items(), key=lambda x: x[1])
         logger.info(f"{epoch=} test {score=} {threshold=}")
-        epoch_loss = epoch_loss / len(self.data_loaders["test"])
-        logger.info(f"{epoch=} test {epoch_loss=}")
 
     def train(self, max_epochs: int) -> None:
         for epoch in range(self.epoch, max_epochs + 1):
