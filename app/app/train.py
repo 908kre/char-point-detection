@@ -10,6 +10,7 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Subset
 from mlboard_client import Writer
+from concurrent import futures
 from datetime import datetime
 from .preprocess import evaluate
 from .models import SENeXt, FocalLoss
@@ -40,14 +41,14 @@ class Trainer:
             "train": DataLoader(
                 Dataset(train_data, resolution=128, mode="Train",),
                 shuffle=True,
-                batch_size=64,
-                num_workers=4,
+                batch_size=128,
+                num_workers=6,
             ),
             "test": DataLoader(
                 Dataset(test_data, resolution=128, mode="Test",),
                 shuffle=False,
-                batch_size=64,
-                num_workers=4,
+                batch_size=128,
+                num_workers=6,
             ),
         }
         train_len = len(train_data)
@@ -66,33 +67,50 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
-            score += evaluate((pred > 0.5).int().cpu().numpy(), label.cpu().numpy())
             epoch_loss += loss.item()
         epoch_loss = epoch_loss / len(self.data_loaders["train"])
-        score = score / len(self.data_loaders["train"])
         epoch = self.epoch
         logger.info(f"{epoch=} train {epoch_loss=}")
-        logger.info(f"{epoch=} train {score=}")
 
     def eval_one_epoch(self) -> None:
         self.model.eval()
         epoch_loss = 0.0
         score = 0.0
+        preds:t.Any = []
+        labels:t.Any = []
         for img, label in tqdm(self.data_loaders["test"]):
             img, label = img.to(self.device), label.to(self.device)
             with torch.no_grad():
                 pred = self.model(img)
                 loss = self.objective(pred, label.float())
                 epoch_loss += loss.item()
-                score += evaluate((pred > 0.5).int().cpu().numpy(), label.cpu().numpy())
-        score = score / len(self.data_loaders["train"])
-        epoch_loss = epoch_loss / len(self.data_loaders["test"])
+                preds.append(pred.cpu().numpy())
+                labels.append(label.cpu().numpy())
+
+        preds = np.concatenate(preds)
+        labels = np.concatenate(labels)
+        print(preds.shape)
+        print(labels.shape)
+        executor = futures.ProcessPoolExecutor()
+        thresholds = [0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15]
+        futs = [
+            executor.submit(evaluate, preds, labels, t)
+            for t
+            in thresholds
+        ]
+        #  th_scores = {}
+        for t, v in zip(thresholds, futures.wait(futs)):
+            print(t, v)
+            #  th_scores[t] = v
+
         epoch = self.epoch
+        #  threshold, score = max(th_scores.items(), key=lambda x: x[1])
+        #  logger.info(f"{epoch=} test {score=} {threshold=}")
+        epoch_loss = epoch_loss / len(self.data_loaders["test"])
         logger.info(f"{epoch=} test {epoch_loss=}")
-        logger.info(f"{epoch=} test {score=}")
 
     def train(self, max_epochs: int) -> None:
         for epoch in range(self.epoch, max_epochs + 1):
             self.epoch = epoch
-            self.train_one_epoch()
+            #  self.train_one_epoch()
             self.eval_one_epoch()

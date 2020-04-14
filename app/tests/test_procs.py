@@ -40,5 +40,5 @@ def test_to_multhot() -> None:
 def test_evaluate() -> None:
     preds = [[0, 1]]
     gts = [[0, 1]]
-    res = evaluate(preds, gts)
+    res = evaluate(preds, gts, 0.4)
     assert res == 5 / 9

@@ -42,7 +42,7 @@ class Dataset(_Dataset):
 
         if self.mode == "Train":
             img = Cutout(p=0.2)(image=img)["image"]
-            img = RandomResizedCrop(self.resolution, self.resolution, scale=(0.5, 1))(
+            img = RandomResizedCrop(self.resolution, self.resolution)(
                 image=img
             )["image"]
             img = HorizontalFlip()(image=img)["image"]

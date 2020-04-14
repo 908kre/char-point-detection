@@ -188,9 +188,9 @@ class SENeXt(nn.Module):
                 }
             )
         )
-        self.avgpool = nn.AdaptiveAvgPool2d(3)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
-            nn.Linear(int(width * ratio ** depth) * 3 * 3, out_channels), nn.Sigmoid(),
+            nn.Linear(int(width * ratio ** depth), out_channels), nn.Sigmoid(),
         )
 
     def forward(self, x):  # type: ignore

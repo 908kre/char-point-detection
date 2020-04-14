@@ -139,9 +139,5 @@ def to_multi_hot(annotations: Annotations, size: int = 3474) -> t.Any:
     return rows
 
 
-def evaluate(preds: t.Any, gts: t.Any) -> float:
-    scores: t.List[float] = []
-    for p, g in zip(preds, gts):
-        score = fbeta_score(g, p, beta=2)
-        scores.append(score)
-    return np.array(scores).mean()
+def evaluate(pred: t.Any, gt: t.Any, threshold:float) -> float:
+    return fbeta_score((pred > threshold), gt, beta=2, average='samples')
