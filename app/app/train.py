@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, Subset
 from mlboard_client import Writer
 from concurrent import futures
 from datetime import datetime
-from .preprocess import evaluate
+from .preprocess import evaluate, binarize_prediction
 from .models import SENeXt, FocalLoss
 from logging import getLogger
 from tqdm import tqdm
@@ -30,7 +30,7 @@ class Trainer:
         self, train_data: Annotations, test_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=128).to(
+        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64).to(
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
@@ -41,13 +41,13 @@ class Trainer:
             "train": DataLoader(
                 Dataset(train_data, resolution=128, mode="Train",),
                 shuffle=True,
-                batch_size=128,
+                batch_size=64,
                 num_workers=6,
             ),
             "test": DataLoader(
                 Dataset(test_data, resolution=128, mode="Test",),
                 shuffle=False,
-                batch_size=128,
+                batch_size=64,
                 num_workers=6,
             ),
         }
