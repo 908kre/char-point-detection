@@ -30,7 +30,7 @@ class Trainer:
         self, train_data: Annotations, test_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        self.model = SENeXt(in_channels=3, out_channels=3474, depth=2, width=64).to(
+        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=128).to(
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
