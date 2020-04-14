@@ -34,7 +34,7 @@ class Trainer:
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
-        self.objective = FocalLoss()
+        self.objective = nn.BCELoss()
         self.epoch = 1
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
