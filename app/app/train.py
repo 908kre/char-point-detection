@@ -30,8 +30,11 @@ class Trainer:
         self, train_data: Annotations, test_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        resolution = 256
-        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64).to(
+        resolution = int(128 * np.sqrt(2))
+        width = int(64 * np.sqrt(2))
+        depth = 3
+        logging.info(f"{resolution=}, {width=}, {depth=}")
+        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=width).to(
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
