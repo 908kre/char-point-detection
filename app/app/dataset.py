@@ -11,8 +11,13 @@ from albumentations.augmentations.transforms import (
     Resize,
     PadIfNeeded,
     RandomBrightnessContrast,
+    ShiftScaleRotate,
     RandomGamma,
     Cutout,
+)
+
+from albumentations.imgaug.transforms import (
+    IAAAdditiveGaussianNoise
 )
 from torchvision.transforms import ToTensor
 
@@ -42,12 +47,15 @@ class Dataset(_Dataset):
 
         if self.mode == "Train":
             img = Cutout(p=0.2)(image=img)["image"]
-            img = RandomResizedCrop(self.resolution, self.resolution)(
+            img = RandomResizedCrop(self.resolution, self.resolution, (0.8, 1.2))(
                 image=img
             )["image"]
-            img = HorizontalFlip()(image=img)["image"]
+            img = HorizontalFlip(p=0.5)(image=img)["image"]
             img = RandomBrightnessContrast(p=0.3)(image=img)["image"]
             img = RandomGamma(gamma_limit=(95, 105), p=0.3)(image=img)["image"]
+            img = ShiftScaleRotate(shift_limit=0.1, scale_limit=0.0, rotate_limit=10, p=0.3)(image=img)["image"]
+            img = IAAAdditiveGaussianNoise(p=0.3)(image=img)["image"]
+
 
         else:
             img = Resize(self.resolution, self.resolution)(image=img)["image"]

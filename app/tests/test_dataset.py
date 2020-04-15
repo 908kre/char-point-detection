@@ -22,10 +22,11 @@ def test_dataset() -> None:
 @pytest.mark.parametrize(
     "id, mode",
     [
-        ("0002fe0e341a9563d0c01b9dab820222", "Train",),
+        #  ("0002fe0e341a9563d0c01b9dab820222", "Train",),
         ("0a0c21426ac8363577a4548348b76494", "Test",),
-        ("005181579e9e1b7bcb42956b4cfbdba8", "Test",),
-        ("0094c096b31a1bace6449743e78b861b", "Test",),
+        ("0a0c21426ac8363577a4548348b76494", "Train",),
+        #  ("005181579e9e1b7bcb42956b4cfbdba8", "Test",),
+        #  ("0094c096b31a1bace6449743e78b861b", "Test",),
     ],
 )
 def test_transform(id: str, mode: Mode) -> None:
@@ -34,7 +35,7 @@ def test_transform(id: str, mode: Mode) -> None:
     dataset = Dataset(annotations, mode=mode, resolution=128)
     save_image(
         make_grid(
-            [dataset[0][0] for i in range(16)],
+            [dataset[0][0] for i in range(24)],
             nrow=8,
             padding=2,
             normalize=False,
@@ -42,5 +43,5 @@ def test_transform(id: str, mode: Mode) -> None:
             scale_each=False,
             pad_value=0,
         ),
-        f"/store/tmp/test_aug_{id}.png",
+        f"/store/tmp/test_aug_{id}-{mode}.png",
     )

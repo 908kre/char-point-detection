@@ -33,7 +33,7 @@ class Trainer:
         self.model = SENeXt(in_channels=3, out_channels=3474, depth=4, width=64).to(
             DEVICE
         )
-        self.optimizer = optim.AdamW(self.model.parameters())
+        self.optimizer = optim.Adam(self.model.parameters())
         self.objective = nn.BCELoss(reduction="none")
         self.epoch = 1
         self.model_path = model_path
@@ -95,7 +95,7 @@ class Trainer:
 
         preds = np.concatenate(preds)
         labels = np.concatenate(labels)
-        executor = futures.ProcessPoolExecutor(max_workers=6)
+        executor = futures.ProcessPoolExecutor(max_workers=3)
         thresholds = [0.05, 0.10, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
         futs, _ = futures.wait([
             executor.submit(evaluate, preds, labels, t)
