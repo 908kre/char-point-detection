@@ -37,7 +37,7 @@ def test_dataset() -> None:
 def test_transform(id: str, mode: Mode) -> None:
     annotations = [Annotation(id, [])]
 
-    dataset = Dataset(annotations, mode=mode, resolution=128)
+    dataset = Dataset(annotations, mode=mode, resolution=320)
     save_image(
         make_grid(
             [dataset[0][0] for i in range(24)],

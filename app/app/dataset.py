@@ -8,6 +8,7 @@ from albumentations.augmentations.transforms import (
     RandomResizedCrop,
     HorizontalFlip,
     CenterCrop,
+    RandomCrop,
     Resize,
     PadIfNeeded,
     RandomBrightnessContrast,
@@ -29,7 +30,7 @@ to_tensor = ToTensor()
 
 class Dataset(_Dataset):
     def __init__(
-        self, annotations: Annotations, resolution: int = 320, mode: Mode = "Train",
+        self, annotations: Annotations, resolution: int = 128, mode: Mode = "Train",
     ) -> None:
         self.annotations = annotations
         self.mode = mode
@@ -44,21 +45,20 @@ class Dataset(_Dataset):
         img = PadIfNeeded(max_hw, max_hw, border_mode=cv2.BORDER_REPLICATE)(image=img)[
             "image"
         ]
+        img = Resize(self.resolution*2, self.resolution*2)(image=img)["image"]
+        print(img.shape)
 
         if self.mode == "Train":
             img = Cutout(p=0.2)(image=img)["image"]
-            img = RandomResizedCrop(self.resolution, self.resolution, (0.8, 1.2))(
-                image=img
-            )["image"]
+            img = RandomCrop(self.resolution, self.resolution)(image=img)["image"]
             img = HorizontalFlip(p=0.5)(image=img)["image"]
             img = RandomBrightnessContrast(p=0.3)(image=img)["image"]
             img = RandomGamma(gamma_limit=(95, 105), p=0.3)(image=img)["image"]
             img = ShiftScaleRotate(shift_limit=0.1, scale_limit=0.0, rotate_limit=10, p=0.3)(image=img)["image"]
             img = IAAAdditiveGaussianNoise(p=0.3)(image=img)["image"]
-
-
         else:
-            img = Resize(self.resolution, self.resolution)(image=img)["image"]
+            img =  CenterCrop(self.resolution, self.resolution)(image=img)["image"]
+        print(img.shape)
         img = ToTensor()(img)
         return img
 
