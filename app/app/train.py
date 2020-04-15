@@ -33,7 +33,7 @@ class Trainer:
         resolution = int(128 * np.sqrt(2))
         width = int(64 * np.sqrt(2))
         depth = 3
-        logging.info(f"{resolution=}, {width=}, {depth=}")
+        logger.info(f"{resolution=}, {width=}, {depth=}")
         self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=width).to(
             DEVICE
         )
