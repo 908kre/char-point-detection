@@ -31,8 +31,8 @@ class Trainer:
     ) -> None:
         self.device = DEVICE
         alpha = 1
-        beta = 1.2
-        gamma = 1.2
+        beta = 1.3
+        gamma = 1.1
         flops_multiplier = alpha * (beta**2) * (gamma ** 2)
         depth = 3 * alpha
         resolution = int(128 * beta)
