@@ -22,11 +22,16 @@ def test_dataset() -> None:
 @pytest.mark.parametrize(
     "id, mode",
     [
-        #  ("0002fe0e341a9563d0c01b9dab820222", "Train",),
+        ("0002fe0e341a9563d0c01b9dab820222", "Train",),
+        ("0002fe0e341a9563d0c01b9dab820222", "Test",),
         ("0a0c21426ac8363577a4548348b76494", "Test",),
         ("0a0c21426ac8363577a4548348b76494", "Train",),
-        #  ("005181579e9e1b7bcb42956b4cfbdba8", "Test",),
-        #  ("0094c096b31a1bace6449743e78b861b", "Test",),
+        ("005181579e9e1b7bcb42956b4cfbdba8", "Test",),
+        ("005181579e9e1b7bcb42956b4cfbdba8", "Train",),
+        ("0094c096b31a1bace6449743e78b861b", "Train",),
+        ("0094c096b31a1bace6449743e78b861b", "Test",),
+        ("00014abc91ed3e4bf1663fde8136fe80", "Train",),
+        ("00014abc91ed3e4bf1663fde8136fe80", "Test",),
     ],
 )
 def test_transform(id: str, mode: Mode) -> None:
