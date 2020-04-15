@@ -30,10 +30,15 @@ class Trainer:
         self, train_data: Annotations, test_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        resolution = int(128 * np.sqrt(2))
-        width = int(64 * np.sqrt(2))
-        depth = 3
-        logger.info(f"{resolution=}, {width=}, {depth=}")
+        alpha = 1
+        beta = 1.1
+        gamma = 1.3
+        flops_multiplier = alpha * (beta**2) * (gamma ** 2)
+        depth = 3 * alpha
+        resolution = int(128 * beta)
+        width = int(64 * gamma)
+        logger.info(f"{alpha=}, {beta=}, {gamma=}, {flops_multiplier=}")
+        logger.info(f"{resolution=}, {width=}, {depth=} ")
         self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=width).to(
             DEVICE
         )
