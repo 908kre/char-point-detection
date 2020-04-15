@@ -46,13 +46,13 @@ class Trainer:
                 Dataset(train_data, resolution=resolution, mode="Train",),
                 shuffle=True,
                 batch_size=32,
-                num_workers=3,
+                num_workers=4,
             ),
             "test": DataLoader(
                 Dataset(test_data, resolution=resolution, mode="Test",),
                 shuffle=False,
                 batch_size=32,
-                num_workers=3,
+                num_workers=4,
             ),
         }
         train_len = len(train_data)
