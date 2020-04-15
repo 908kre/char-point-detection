@@ -36,9 +36,9 @@ class Trainer:
         coefficient = 2
         flops_multiplier = alpha * (beta**2) * (gamma ** 2)
         depth = 3 * alpha ** coefficient
-        resolution = int(128 * betai ** coefficient)
+        resolution = int(128 * beta ** coefficient)
         width = int(64 * gamma ** coefficient)
-        logger.info(f"{alpha=}, {beta=}, {gamma=}, {flops_multiplier=}")
+        logger.info(f"{alpha=}, {beta=}, {gamma=}, {flops_multiplier=}, {coefficient=}")
         logger.info(f"{resolution=}, {width=}, {depth=} ")
         self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=width).to(
             DEVICE
