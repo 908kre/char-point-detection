@@ -46,7 +46,6 @@ class Dataset(_Dataset):
             "image"
         ]
         img = Resize(self.resolution*2, self.resolution*2)(image=img)["image"]
-        print(img.shape)
 
         if self.mode == "Train":
             img = Cutout(p=0.2)(image=img)["image"]
@@ -58,7 +57,6 @@ class Dataset(_Dataset):
             img = IAAAdditiveGaussianNoise(p=0.3)(image=img)["image"]
         else:
             img =  CenterCrop(self.resolution, self.resolution)(image=img)["image"]
-        print(img.shape)
         img = ToTensor()(img)
         return img
 
