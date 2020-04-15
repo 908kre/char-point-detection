@@ -30,7 +30,8 @@ class Trainer:
         self, train_data: Annotations, test_data: Annotations, model_path: str
     ) -> None:
         self.device = DEVICE
-        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=128).to(
+        resolution = 256
+        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=64).to(
             DEVICE
         )
         self.optimizer = optim.Adam(self.model.parameters())
@@ -39,16 +40,16 @@ class Trainer:
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
-                Dataset(train_data, resolution=128, mode="Train",),
+                Dataset(train_data, resolution=resolution, mode="Train",),
                 shuffle=True,
-                batch_size=64,
-                num_workers=2,
+                batch_size=32,
+                num_workers=3,
             ),
             "test": DataLoader(
-                Dataset(test_data, resolution=128, mode="Test",),
+                Dataset(test_data, resolution=resolution, mode="Test",),
                 shuffle=False,
-                batch_size=64,
-                num_workers=2,
+                batch_size=32,
+                num_workers=3,
             ),
         }
         train_len = len(train_data)

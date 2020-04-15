@@ -172,6 +172,7 @@ class SENeXt(nn.Module):
         depth: int,
         width: int,
         ratio: float = 2.0,
+        stride: int = 4
     ) -> None:
         super().__init__()
         self.in_conv = ConvBR2d(in_channels, width, is_activation=False)
@@ -181,7 +182,7 @@ class SENeXt(nn.Module):
                     f"layer-{i}": SENextBottleneck(
                         in_channels=int(width * ratio ** i),
                         out_channels=int(width * ratio ** (i + 1)),
-                        stride=2,
+                        stride=stride,
                         groups=int(width * ratio ** (i + 1)) // depth,
                     )
                     for i in range(depth)
