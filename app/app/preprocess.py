@@ -139,11 +139,15 @@ def to_multi_hot(annotations: Annotations, size: int = 3474) -> t.Any:
     return rows
 
 
-def evaluate(pred: t.Any, gt: t.Any, threshold:float) -> float:
-    return fbeta_score(binarize_prediction(pred, threshold), gt, beta=2, average='samples')
+def evaluate(pred: t.Any, gt: t.Any, threshold: float) -> float:
+    return fbeta_score(
+        binarize_prediction(pred, threshold), gt, beta=2, average="samples"
+    )
 
 
-def binarize_prediction(probabilities:t.Any, threshold: float, min_labels:int=1, max_labels:int=10)->t.Any:
+def binarize_prediction(
+    probabilities: t.Any, threshold: float, min_labels: int = 1, max_labels: int = 8
+) -> t.Any:
     """
     Return matrix of 0/1 predictions, same shape as probabilities.
     """
@@ -154,7 +158,8 @@ def binarize_prediction(probabilities:t.Any, threshold: float, min_labels:int=1,
     prob_mask = probabilities > threshold
     return (max_mask & prob_mask) | min_mask
 
-def _make_mask(argsorted:t.Any, top_n: int) -> t.Any:
+
+def _make_mask(argsorted: t.Any, top_n: int) -> t.Any:
     mask = np.zeros_like(argsorted, dtype=np.uint8)
     col_indices = argsorted[:, -top_n:].reshape(-1)
     row_indices = [i // top_n for i in range(len(col_indices))]

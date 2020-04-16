@@ -15,11 +15,10 @@ from albumentations.augmentations.transforms import (
     ShiftScaleRotate,
     RandomGamma,
     Cutout,
+    Normalize,
 )
-
-from albumentations.imgaug.transforms import (
-    IAAAdditiveGaussianNoise
-)
+from albumentations.pytorch import ToTensorV2
+from albumentations.imgaug.transforms import IAAAdditiveGaussianNoise
 from torchvision.transforms import ToTensor
 
 
@@ -46,16 +45,20 @@ class Dataset(_Dataset):
             "image"
         ]
         img = Resize(self.resolution, self.resolution)(image=img)["image"]
+        img = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],)(
+            image=img
+        )["image"]
 
         if self.mode == "Train":
-            img = RandomResizedCrop(self.resolution, self.resolution, (0.7, 1.4))(image=img)["image"]
+            img = RandomResizedCrop(self.resolution, self.resolution)(image=img)[
+                "image"
+            ]
             img = Cutout(p=0.2)(image=img)["image"]
             img = HorizontalFlip(p=0.5)(image=img)["image"]
-            img = RandomBrightnessContrast(p=0.3)(image=img)["image"]
-            img = RandomGamma(gamma_limit=(95, 105), p=0.3)(image=img)["image"]
-            img = ShiftScaleRotate(shift_limit=0.1, scale_limit=0.0, rotate_limit=10, p=0.3)(image=img)["image"]
-            img = IAAAdditiveGaussianNoise(p=0.3)(image=img)["image"]
-        img = ToTensor()(img)
+            img = ShiftScaleRotate(
+                shift_limit=0.1, scale_limit=0.0, rotate_limit=10, p=0.3
+            )(image=img)["image"]
+        img = ToTensorV2()(image=img)["image"]
         return img
 
     def __get_img(self, path: str) -> t.Any:

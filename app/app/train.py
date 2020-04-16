@@ -33,19 +33,20 @@ class Trainer:
         alpha = 1
         beta = 1.1
         gamma = 1.3
-        coefficient = 2
-        flops_multiplier = alpha * (beta**2) * (gamma ** 2)
-        depth = 3 * alpha ** coefficient
-        resolution = int(128 * beta ** coefficient)
-        width = int(64 * gamma ** coefficient)
-        logger.info(f"{alpha=}, {beta=}, {gamma=}, {flops_multiplier=}, {coefficient=}")
+        coefficient = 1
+        flops_multiplier = alpha * (beta ** 2) * (gamma ** 2)
+        depth = 3 * (alpha ** coefficient)
+        resolution = int(128 * (beta ** coefficient))
+        width = int(64 * (gamma ** coefficient))
+        logger.info(f"{alpha=}, {beta=}, {gamma=}, {flops_multiplier=}")
         logger.info(f"{resolution=}, {width=}, {depth=} ")
-        self.model = SENeXt(in_channels=3, out_channels=3474, depth=3, width=width).to(
-            DEVICE
-        )
+        self.model = SENeXt(
+            in_channels=3, out_channels=3474, depth=depth, width=width
+        ).to(DEVICE)
         self.optimizer = optim.Adam(self.model.parameters())
         self.objective = nn.BCELoss(reduction="none")
         self.epoch = 1
+        self.best_score = 0
         self.model_path = model_path
         self.data_loaders: DataLoaders = {
             "train": DataLoader(
@@ -88,8 +89,8 @@ class Trainer:
         epoch = self.epoch
         epoch_loss = 0.0
         score = 0.0
-        preds:t.Any = []
-        labels:t.Any = []
+        preds: t.Any = []
+        labels: t.Any = []
         for img, label in tqdm(self.data_loaders["test"]):
             img, label = img.to(self.device), label.to(self.device)
             with torch.no_grad():
@@ -107,11 +108,9 @@ class Trainer:
         labels = np.concatenate(labels)
         executor = futures.ProcessPoolExecutor(max_workers=3)
         thresholds = [0.05, 0.10, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
-        futs, _ = futures.wait([
-            executor.submit(evaluate, preds, labels, t)
-            for t
-            in thresholds
-        ])
+        futs, _ = futures.wait(
+            [executor.submit(evaluate, preds, labels, t) for t in thresholds]
+        )
         th_scores = {}
         for t, fut in zip(thresholds, futs):
             th_scores[t] = fut.result()
