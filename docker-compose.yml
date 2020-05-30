@@ -2,12 +2,11 @@ version: '2.4'
 
 services:
   app:
-    build: ./app
+    build: .
     volumes:
-      - ./app:/srv
+      - .:/srv
       - ./store:/store
     runtime: nvidia
-    shm_size: '16gb'
     environment:
       - KAGGLE_USERNAME
       - KAGGLE_KEY
