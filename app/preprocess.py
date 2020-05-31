@@ -3,9 +3,6 @@ from cytoolz.curried import groupby, valmap, pipe, unique, map
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from skimage.segmentation import clear_border
-from skimage.measure import regionprops
-from skimage.io import imread
 from sklearn.model_selection import StratifiedKFold
 from app import config
 from app.entities import BBox, BBoxs, Images, Image
@@ -18,8 +15,8 @@ def to_bbox(value: str) -> BBox:
     return BBox(*arr)
 
 
-def load_lables() -> Images:
-    df = pd.read_csv(config.label_path)
+def load_lables(limit: t.Union[None, int] = None) -> Images:
+    df = pd.read_csv(config.label_path, nrows=limit)
     rows = df.to_dict("records")
     images = pipe(
         rows,
@@ -38,10 +35,9 @@ def load_lables() -> Images:
 
 
 def plot_with_bbox(image: Image) -> None:
-    image_path = Path(config.train_dir).joinpath(f"{image.id}.jpg")
-    image_arr = imread(image_path)
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.grid(False)
+    image_arr = image.get_arr()
     ax.imshow(image_arr)
     for bbox in image.bboxs:
         rect = mpatches.Rectangle(

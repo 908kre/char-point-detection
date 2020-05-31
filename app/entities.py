@@ -1,4 +1,7 @@
 import typing as t
+from skimage.io import imread
+from pathlib import Path
+from app import config
 
 
 class BBox:
@@ -36,6 +39,10 @@ class Image:
     def __repr__(self,) -> str:
         id = self.id
         return f"<Image {id=}>"
+
+    def get_arr(self) -> t.Any:
+        image_path = Path(config.image_dir).joinpath(f"{self.id}.jpg")
+        return imread(image_path)
 
 
 Images = t.Dict[str, Image]

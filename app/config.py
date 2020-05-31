@@ -1,4 +1,4 @@
 label_path = "/store/train.csv"
-train_dir = "/store/train"
 plot_dir = "/store/plot"
+image_dir = "/store/images"
 random_state = 777
