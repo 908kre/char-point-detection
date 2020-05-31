@@ -14,3 +14,4 @@ def test_plot_with_bbox() -> None:
         bbox=(953, 220, 56, 103),
         source="usask_1",
     )
+    plot_with_bbox(label)

@@ -1,4 +1,6 @@
 from logging import getLogger, StreamHandler, Formatter, INFO, FileHandler
+from pathlib import Path
+from . import config
 
 logger = getLogger()
 logger.setLevel(INFO)
@@ -12,3 +14,5 @@ file_handler = FileHandler(filename="app.log")
 logger.addHandler(file_handler)
 file_handler.setLevel(INFO)
 file_handler.setFormatter(handler_format)
+
+Path(config.plot_dir).mkdir(exist_ok=True)
