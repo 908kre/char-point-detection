@@ -1,21 +1,37 @@
 import typing as t
 
 
-BBox = t.Tuple[int, int, int, int]
+class BBox:
+    x: int
+    y: int
+    w: int
+    h: int
+
+    def __init__(self, x: int, y: int, w: int, h: int) -> None:
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
 
 
-class TrainLabel:
-    image_id: str
+BBoxs = t.List[BBox]
+
+
+class Image:
+    id: str
     width: int
     height: int
-    bbox: BBox
+    bboxs: BBoxs
     source: str
 
     def __init__(
-        self, image_id: str, width: int, height: int, bbox: BBox, source: str
+        self, id: str, width: int, height: int, bboxs: BBoxs, source: str
     ) -> None:
-        self.image_id = image_id
+        self.id = id
         self.width = width
         self.height = height
-        self.bbox = bbox
+        self.bboxs = bboxs
         self.source = source
+
+
+Images = t.Dict[str, Image]
