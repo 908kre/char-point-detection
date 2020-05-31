@@ -5,7 +5,9 @@ from torch.utils.data import Dataset
 
 
 class TrainDataset(Dataset):
-    def __init__(self, images: Images, mode:t.Literal["train", "test"]="train") -> None:
+    def __init__(
+        self, images: Images, mode: t.Literal["train", "test"] = "train"
+    ) -> None:
         self.rows = list(images.values())
         self.mode = mode
 
@@ -14,16 +16,11 @@ class TrainDataset(Dataset):
 
     def __getitem__(self, index: int) -> t.Any:
         image = self.rows[index]
-        arr = image.get_arr()
+        image_arr = image.get_arr()
         box_arrs = np.stack([x.to_arr() for x in image.bboxes])
-        print(box_arrs.shape)
-        print(arr.shape)
-        print(arr.dtype)
-        #  image = cv2.imread(f'{DATA_ROOT_PATH}/{image_id}.jpg', cv2.IMREAD_COLOR)
-        #  image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
-        #  image /= 255.0
-        #  if self.transforms:
-        #      sample = {'image': image}
-        #      sample = self.transforms(**sample)
-        #      image = sample['image']
-        #  return image, image_id
+
+        return {
+            "image_id": image.id,
+            "image": image_arr,
+            "bboxes": box_arrs,
+        }

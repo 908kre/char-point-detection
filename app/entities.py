@@ -23,6 +23,7 @@ class BBox:
 
 BBoxes = t.List[BBox]
 
+
 class Image:
     id: str
     width: int
