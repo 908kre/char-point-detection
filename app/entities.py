@@ -33,5 +33,9 @@ class Image:
         self.bboxs = bboxs
         self.source = source
 
+    def __repr__(self,) -> str:
+        id = self.id
+        return f"<Image {id=}>"
+
 
 Images = t.Dict[str, Image]

@@ -1,4 +1,5 @@
-from cytoolz.curried import groupby, valmap, pipe
+import typing as t
+from cytoolz.curried import groupby, valmap, pipe, unique, map
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -51,11 +52,12 @@ def plot_with_bbox(image: Image) -> None:
     plt.close()
 
 
-#
-#
-#  def kfold(bboxs: BBoxs) -> None:
-#      skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=config.random_state)
-#      group = groupby(lambda x: x["image_id"])(bboxs)
-#      image_ids = list(group.keys())
-#      kfold_keys = valmap(lambda x: f"{x[0]['source']}-{len(x)}")(group)
-#      print(kfold_keys)
+def kfold(images: Images) -> t.Iterator[t.Tuple[Images, Images]]:
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=config.random_state)
+    rows = list(images.values())
+    fold_keys = pipe(rows, map(lambda x: f"{x.source}-{len(x.bboxs) // 15}"), list)
+
+    for train, valid in skf.split(rows, fold_keys):
+        train_rows = {rows[i].id: rows[i] for i in train}
+        valid_rows = {rows[i].id: rows[i] for i in valid}
+        yield (train_rows, valid_rows)
