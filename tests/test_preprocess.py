@@ -8,7 +8,7 @@ first_sample: t.Union[None, Image] = None
 def test_load_lables() -> None:
     images = load_lables()
     first_sample = next(iter(images.values()))
-    assert len(first_sample.bboxs) == 47
+    assert len(first_sample.bboxes) == 47
 
 
 def test_plot_with_bbox() -> None:

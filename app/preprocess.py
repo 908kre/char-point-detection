@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.model_selection import StratifiedKFold
 from app import config
-from app.entities import BBox, BBoxs, Images, Image
+from app.entities import BBox, BBoxes, Images, Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
@@ -27,7 +27,7 @@ def load_lables(limit: t.Union[None, int] = None) -> Images:
                 source=x[0]["source"],
                 width=x[0]["width"],
                 height=x[0]["height"],
-                bboxs=[to_bbox(b["bbox"]) for b in x],
+                bboxes=[to_bbox(b["bbox"]) for b in x],
             )
         ),
     )
@@ -39,7 +39,7 @@ def plot_with_bbox(image: Image) -> None:
     ax.grid(False)
     image_arr = image.get_arr()
     ax.imshow(image_arr)
-    for bbox in image.bboxs:
+    for bbox in image.bboxes:
         rect = mpatches.Rectangle(
             (bbox.x, bbox.y), bbox.w, bbox.h, fill=False, edgecolor="red", linewidth=1,
         )
@@ -51,7 +51,7 @@ def plot_with_bbox(image: Image) -> None:
 def kfold(images: Images) -> t.Iterator[t.Tuple[Images, Images]]:
     skf = StratifiedKFold(n_splits=4, shuffle=True, random_state=config.random_state)
     rows = list(images.values())
-    fold_keys = pipe(rows, map(lambda x: f"{x.source}-{len(x.bboxs) // 1}"), list)
+    fold_keys = pipe(rows, map(lambda x: f"{x.source}-{len(x.bboxes) // 1}"), list)
 
     for train, valid in skf.split(X=rows, y=fold_keys):
         train_rows = {rows[i].id: rows[i] for i in train}

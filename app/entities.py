@@ -1,3 +1,4 @@
+import numpy as np
 import typing as t
 from skimage.io import imread
 from pathlib import Path
@@ -16,24 +17,26 @@ class BBox:
         self.w = w
         self.h = h
 
+    def to_arr(self,) -> t.Any:
+        return np.array([self.x, self.y, self.x + self.w, self.y + self.h])
 
-BBoxs = t.List[BBox]
 
+BBoxes = t.List[BBox]
 
 class Image:
     id: str
     width: int
     height: int
-    bboxs: BBoxs
+    bboxes: BBoxes
     source: str
 
     def __init__(
-        self, id: str, width: int, height: int, bboxs: BBoxs, source: str
+        self, id: str, width: int, height: int, bboxes: BBoxes, source: str
     ) -> None:
         self.id = id
         self.width = width
         self.height = height
-        self.bboxs = bboxs
+        self.bboxes = bboxes
         self.source = source
 
     def __repr__(self,) -> str:
@@ -42,7 +45,7 @@ class Image:
 
     def get_arr(self) -> t.Any:
         image_path = Path(config.image_dir).joinpath(f"{self.id}.jpg")
-        return imread(image_path)
+        return (imread(image_path) / 255).astype(np.float32)
 
 
 Images = t.Dict[str, Image]
