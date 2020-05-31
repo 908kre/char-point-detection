@@ -19,5 +19,5 @@ def test_plot_with_bbox() -> None:
 
 def test_kfold() -> None:
     images = load_lables()
-    first_fold = next(kfold(images))
-    print(first_fold)
+    fold_train, fold_valid = next(kfold(images))
+    assert len(fold_train) + len(fold_valid) == len(images)

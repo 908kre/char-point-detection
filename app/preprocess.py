@@ -53,11 +53,11 @@ def plot_with_bbox(image: Image) -> None:
 
 
 def kfold(images: Images) -> t.Iterator[t.Tuple[Images, Images]]:
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=config.random_state)
+    skf = StratifiedKFold(n_splits=4, shuffle=True, random_state=config.random_state)
     rows = list(images.values())
-    fold_keys = pipe(rows, map(lambda x: f"{x.source}-{len(x.bboxs) // 15}"), list)
+    fold_keys = pipe(rows, map(lambda x: f"{x.source}-{len(x.bboxs) // 1}"), list)
 
-    for train, valid in skf.split(rows, fold_keys):
+    for train, valid in skf.split(X=rows, y=fold_keys):
         train_rows = {rows[i].id: rows[i] for i in train}
         valid_rows = {rows[i].id: rows[i] for i in valid}
         yield (train_rows, valid_rows)
