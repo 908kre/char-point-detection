@@ -1,16 +1,17 @@
-import numpy as np
-import typing as t
-import pandas as pd
-import os
-from concurrent.futures import ProcessPoolExecutor
-from skimage import io
-import glob
-from tqdm import tqdm
-from sklearn.metrics import fbeta_score
-from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
-from .entities import Label, Labels, Annotations, Annotation
-from .dataset import Dataset
-from cytoolz.curried import unique, pipe, map, mapcat, frequencies, topk
 import seaborn as sns
+import pandas as pd
+from app import config
 
 sns.set()
+
+
+def load_lables() -> None:
+    df = pd.read_csv(config.label_path)[:10]
+    for r in df.iterrows():
+        print(r)
+    print(len(df))
+
+
+def plot_with_bbox(image_id: str) -> None:
+    print(image_id)
+    #  plt.imshow(image_id)

@@ -1,27 +1,21 @@
 import typing as t
 
 
-class Label:
-    id: int
-    category: str
-    detail: str
-
-    def __init__(self, id: int, category: str, detail: str) -> None:
-        self.id = id
-        self.category = category
-        self.detail = detail
+BBox = t.Tuple[int, int, int, int]
 
 
-Labels = t.Dict[int, Label]
+class TrainLabel:
+    image_id: str
+    width: int
+    height: int
+    bbox: BBox
+    source: str
 
-
-class Annotation:
-    id: str
-    label_ids: t.Sequence[int]
-
-    def __init__(self, id: str, label_ids: t.Sequence[int]) -> None:
-        self.id = id
-        self.label_ids = label_ids
-
-
-Annotations = t.List[Annotation]
+    def __init__(
+        self, image_id: str, width: int, height: int, bbox: BBox, source: str
+    ) -> None:
+        self.image_id = image_id
+        self.width = width
+        self.height = height
+        self.bbox = bbox
+        self.source = source
