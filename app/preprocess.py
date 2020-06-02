@@ -9,6 +9,20 @@ from app.entities import BBox, BBoxes, Images, Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+def plot_bboxes(bboxes:BBoxes, path:str) -> None:
+    fig, axs = plt.subplots(2)
+    sizes = [b.size() for b in bboxes]
+    axs[0].hist(sizes, bins=100)
+    blank_img = np.zeros((1024, 1024))
+    axs[1].imshow(blank_img)
+    for bbox in bboxes:
+        rect = mpatches.Rectangle(
+            (0, 0), bbox.w, bbox.h, fill=False, edgecolor="red", linewidth=1,
+        )
+        axs[1].add_patch(rect)
+    plt.savefig(Path(config.plot_dir).joinpath(path))
+    plt.close()
+
 
 def to_bbox(value: str) -> BBox:
     arr = np.fromstring(value[1:-1], sep=",")

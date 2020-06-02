@@ -19,6 +19,8 @@ class BBox:
 
     def to_arr(self,) -> t.Any:
         return np.array([self.x, self.y, self.x + self.w, self.y + self.h])
+    def size(self,) -> int:
+        return self.w * self.h
 
 
 BBoxes = t.List[BBox]
