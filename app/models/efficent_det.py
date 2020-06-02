@@ -1,3 +1,4 @@
+import numpy as np
 import typing as t
 import torch
 from torch import nn, Tensor
@@ -9,7 +10,7 @@ import torchvision
 
 class BBoxTransform(nn.Module):
     def __init__(
-        self, mean: t.Optional[float] = None, std: t.Optional[float] = None
+        self, mean: t.Optional[t.Any] = None, std: t.Optional[t.Any] = None
     ) -> None:
         super(BBoxTransform, self).__init__()
         if mean is None:
@@ -34,6 +35,7 @@ class BBoxTransform(nn.Module):
         dy = deltas[:, :, 1] * self.std[1] + self.mean[1]
         dw = deltas[:, :, 2] * self.std[2] + self.mean[2]
         dh = deltas[:, :, 3] * self.std[3] + self.mean[3]
+        #  print(dx, dy,dw,dh)
 
         pred_ctr_x = ctr_x + dx * widths
         pred_ctr_y = ctr_y + dy * heights
