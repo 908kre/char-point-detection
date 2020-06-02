@@ -4,6 +4,7 @@ from app.models.efficent_det import (
     BBoxTransform,
     RegressionModel,
     ClassificationModel,
+    Anchors,
 )
 
 
@@ -38,4 +39,11 @@ def test_classification_model() -> None:
     fn = ClassificationModel(num_features_in=100, num_classes=2)
     res = fn(images)
     assert res.shape == (1, 900, 2)
+    print(res.shape)
+
+
+def test_anchors() -> None:
+    images = torch.ones((1, 3, 10, 10))
+    fn = Anchors(pyramid_levels=[1,])
+    res = fn(images)
     print(res.shape)
