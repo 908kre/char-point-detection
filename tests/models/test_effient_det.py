@@ -43,7 +43,7 @@ def test_classification_model() -> None:
 
 
 def test_anchors() -> None:
-    images = torch.ones((1, 3, 10, 10))
-    fn = Anchors(pyramid_levels=[1,])
+    images = torch.ones((1, 3, 4, 4))
+    fn = Anchors(pyramid_levels=[1])
     res = fn(images)
-    print(res.shape)
+    assert res.shape == (1, 9 * 4, 4)

@@ -168,6 +168,7 @@ class Anchors(nn.Module):
             self.strides = [2 ** x for x in self.pyramid_levels]
         else:
             self.strides = strides
+        print(self.strides)
         if sizes is None:
             self.sizes = [2 ** (x + 2) for x in self.pyramid_levels]
         else:
