@@ -2,7 +2,12 @@ version: '2.4'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        - http_proxy
+        - https_proxy
+
     volumes:
       - .:/srv
       - ./store:/store
