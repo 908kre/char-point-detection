@@ -44,8 +44,6 @@ class Trainer:
             self.train_one_epoch()
             logger.info(f"{epoch=}")
 
-
-
     def train_one_epoch(self) -> None:
         for images, targets, image_ids in self.data_loaders["train"]:
             print(images)

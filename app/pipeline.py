@@ -5,13 +5,10 @@ import matplotlib.pyplot as plt
 from app.train import Trainer
 from app.preprocess import load_lables, KFold, plot_bboxes
 
+
 def eda_bboxes() -> None:
     images = load_lables()
-    bboxes = pipe(
-        images.values(),
-        map(lambda x: x.bboxes),
-        reduce(lambda x, y: x + y),
-    )
+    bboxes = pipe(images.values(), map(lambda x: x.bboxes), reduce(lambda x, y: x + y),)
     plot_bboxes(bboxes, "bbox_sizes.png")
 
 

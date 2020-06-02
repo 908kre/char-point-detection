@@ -14,10 +14,22 @@ class TrainDataset(Dataset):
     def __len__(self) -> int:
         return len(self.rows)
 
+    def collate_fn(self, batch) -> t.Any:
+        images = []
+        boxes = []
+        labels = []
+        for img, box, label in batch:
+            images.append(img)
+            boxes.append(box)
+            labels.append(label)
+        return torch.stack(images)
+
     def __getitem__(self, index: int) -> t.Any:
         image = self.rows[index]
         image_arr = image.get_arr()
+
         box_arrs = np.stack([x.to_arr() for x in image.bboxes])
+        labels = torch.ones((len(box_arrs),))
 
         return {
             "image_id": image.id,

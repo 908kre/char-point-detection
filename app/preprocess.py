@@ -9,11 +9,14 @@ from app.entities import BBox, BBoxes, Images, Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-def plot_bboxes(bboxes:BBoxes, path:str) -> None:
-    fig, axs = plt.subplots(3)
+
+def plot_bboxes(bboxes: BBoxes, path: str) -> None:
+    fig, axs = plt.subplots(3, sharex=True)
     sizes = [b.size() for b in bboxes]
     axs[0].hist([b.w for b in bboxes], bins=100)
+    axs[0].set_ylabel("w")
     axs[1].hist([b.h for b in bboxes], bins=100)
+    axs[1].set_ylabel("h")
     blank_img = np.zeros((1024, 1024))
     axs[2].imshow(blank_img)
     for bbox in bboxes:
