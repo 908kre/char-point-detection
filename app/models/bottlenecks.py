@@ -15,7 +15,9 @@ class MobileV3(nn.Module):
     ):
         super().__init__()
         padding = (kernel - 1) // 2
+        self.stride = stride
         self.is_shortcut = (stride == 1) and (in_channels == out_channels)
+
         self.conv = nn.Sequential(
             # pw
             ConvBR2d(in_channels, mid_channels, 1, 1, 0),
@@ -38,6 +40,8 @@ class MobileV3(nn.Module):
 
     def forward(self, x):  # type: ignore
         if self.is_shortcut:
+            if self.stride > 1:
+                x = F.avg_pool2d(x, self.stride, self.stride)  # avg
             return x + self.conv(x)
         else:
             return self.conv(x)
