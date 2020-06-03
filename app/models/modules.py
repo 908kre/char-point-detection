@@ -2,6 +2,14 @@ from torch import nn
 import torch.nn.functional as F
 
 
+class Swish(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, x):  # type:ignore
+        return x * torch.sigmoid(x)
+
+
 class Hswish(nn.Module):
     def __init__(self, inplace: bool = True) -> None:
         super().__init__()

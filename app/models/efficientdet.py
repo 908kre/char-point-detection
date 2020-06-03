@@ -7,7 +7,8 @@ import math
 from itertools import product as product
 import torchvision
 
-#  from .bifpn import BiFPN
+from .bifpn import BiFPN
+
 #  from .efficientnet import EfficientNet
 from .retinahead import RetinaHead
 from .focalloss import FocalLoss
@@ -270,27 +271,28 @@ def generate_anchors(
     return anchors
 
 
-#  class EfficientDet(nn.Module):
-#      def __init__(
-#          self,
-#          num_classes: int,
-#          network: ModelName = "efficientdet-d0",
-#          D_bifpn: int = 3,
-#          W_bifpn: int = 88,
-#          D_class: int = 3,
-#          is_training: bool = True,
-#          threshold: float = 0.01,
-#          iou_threshold: float = 0.5,
-#      ) -> None:
-#          super(EfficientDet, self).__init__()
+class EfficientDet(nn.Module):
+    def __init__(
+        self,
+        num_classes: int,
+        network: ModelName = "efficientdet-d0",
+        D_bifpn: int = 3,
+        W_bifpn: int = 88,
+        D_class: int = 3,
+        threshold: float = 0.01,
+        iou_threshold: float = 0.5,
+    ) -> None:
+        ...
+        super().__init__()
+
+
 #          self.backbone = EfficientNet.from_pretrained(network)
-#          self.is_training = is_training
-#          self.neck = BiFPN(
-#              in_channels=self.backbone.get_list_features()[-5:],
-#              out_channels=W_bifpn,
-#              stack=D_bifpn,
-#              num_outs=5,
-#          )
+#  self.neck = BiFPN(
+#      in_channels=self.backbone.get_list_features()[-5:],
+#      out_channels=W_bifpn,
+#      stack=D_bifpn,
+#      num_outs=5,
+#  )
 #          self.bbox_head = RetinaHead(num_classes=num_classes, in_channels=W_bifpn)
 #
 #          self.anchors = Anchors()
