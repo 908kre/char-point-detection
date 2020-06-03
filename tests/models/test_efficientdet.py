@@ -1,5 +1,5 @@
 import torch
-from app.models.efficent_det import (
+from app.models.efficientdet import (
     ClipBoxes,
     BBoxTransform,
     RegressionModel,
@@ -39,7 +39,6 @@ def test_classification_model() -> None:
     fn = ClassificationModel(num_features_in=100, num_classes=2)
     res = fn(images)
     assert res.shape == (1, 900, 2)
-    print(res.shape)
 
 
 def test_anchors() -> None:
