@@ -8,4 +8,10 @@ def test_bifpn() -> None:
     )
     m = BiFPN(channels=128)
     res = m(req)
-    #  assert req.shape == res.shape
+
+    for i, o in zip(req, res):
+        assert i.shape == o.shape
+    res = m(res)
+
+    #  for i, o in zip(req, res):
+    #      assert i.shape == o.shape
