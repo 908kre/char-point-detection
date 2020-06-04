@@ -1,6 +1,9 @@
 from pathlib import Path
 import typing as t
 import joblib
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
@@ -14,13 +17,13 @@ class Cache:
         path = self.cache_dir.joinpath(key)
 
         def execute(*args: t.Any, **kwargs: t.Any) -> t.Any:
-            print(f"execute {key}")
+            logger.info(f"execute {key}")
             res = f(*args, **kwargs)
             joblib.dump(res, path)
             return res
 
         def skip(*args: t.Any, **kwargs: t.Any) -> t.Any:
-            print(f"skip {key}")
+            logger.info(f"skip {key}")
             res = joblib.load(path)
             return res
 
