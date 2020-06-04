@@ -23,13 +23,11 @@ class Anchors(nn.Module):
         image: [B, C, W, H]
         return: [B, num_anchors, 4]
         """
-
         image_shape = image.shape[2:]
         image_shape = np.array(image_shape)
         feature_shapes = [
             (image_shape + 2 ** x - 1) // (2 ** x) for x in self.pyramid_levels
         ]
-        print(feature_shapes)
 
         # compute anchors over all pyramid levels
         all_anchors = np.zeros((0, 4)).astype(np.float32)
@@ -40,7 +38,6 @@ class Anchors(nn.Module):
             anchors = generate_anchors(
                 base_size=size, ratios=self.ratios, scales=self.scales
             )
-            print(anchors)
             shifted_anchors = shift(feature_shape, stride, anchors)
             all_anchors = np.append(all_anchors, shifted_anchors, axis=0)
 

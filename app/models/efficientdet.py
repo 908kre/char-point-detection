@@ -3,16 +3,18 @@ import typing as t
 import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
+from torchvision.ops import nms
 import math
 from itertools import product as product
 import torchvision
-
+from logging import getLogger
 from .bifpn import BiFPN
 
 #  from .efficientnet import EfficientNet
-from .retinahead import RetinaHead
 from .losses import FocalLoss
 from .anchors import Anchors
+
+logger = getLogger(__name__)
 
 ModelName = t.Literal[
     "efficientdet-d0",
@@ -155,7 +157,7 @@ class RegressionModel(nn.Module):
         self.act4 = nn.ReLU()
         self.output = nn.Conv2d(feature_size, num_anchors * 4, kernel_size=3, padding=1)
 
-    def forward(self, x):  # type: ignore
+    def forward(self, x: Tensor) -> Tensor:
         out = self.conv1(x)
         out = self.act1(out)
         out = self.conv2(out)
@@ -184,19 +186,48 @@ class EfficientDet(nn.Module):
         super().__init__()
         self.anchors = Anchors()
         self.clip_boxes = ClipBoxes()
-        self.head = RetinaHead(num_classes=2, in_channels=128,)
+        self.neck = BiFPN(channels=128)
         self.threshold = threshold
+        self.regression = RegressionModel(128)
+        self.classification = ClassificationModel(128, num_classes=2)
+        self.bbox_transform = BBoxTransform()
         self.iou_threshold = iou_threshold
         self.criterion = FocalLoss()
 
-    def forward(self, inputs: Tensor, annotations: t.Optional[Tensor] = None) -> None:
-        x = self.extract_feat(inputs)
-        cls_pred, bbox_pred = self.head(x)
-        #  print(cls_pred.shape)
-        #  print(bbox_pred.shape)
-        #  classification = torch.cat([o for o in cls_pred], dim=1)
-        #  classification = torch.cat([o for o in cls_pred], dim=1)
-        #  print(classification.shape)
+    def forward(
+        self, inputs: Tensor, annotations: t.Optional[Tensor] = None
+    ) -> t.Tuple[Tensor, Tensor, Tensor]:
+        features = self.extract_feat(inputs)
+        regressions = torch.cat(
+            [self.regression(feature) for feature in features], dim=1
+        )
+        classifications = torch.cat(
+            [self.classification(feature) for feature in features], dim=1
+        )
+        anchors = self.anchors(inputs)
+        if annotations is not None:
+            return self.criterion(classifications, regressions, anchors, annotations)
+
+        if annotations is None:
+            transformed_anchors = self.bbox_transform(anchors, regressions)
+            transformed_anchors = self.clip_boxes(transformed_anchors, inputs)
+            scores = torch.max(classifications, dim=2, keepdim=True)[0]
+
+            scores_over_thresh = (scores > self.threshold)[0, :, 0]
+            if scores_over_thresh.sum() == 0:
+                logger.info("No boxes to NMS")
+                return torch.zeros(0), torch.zeros(0), torch.zeros(0, 4)
+            classification = classifications[:, scores_over_thresh, :]
+            anchors_nms_idx = nms(
+                transformed_anchors[0, :, :],
+                scores[0, :, 0],
+                iou_threshold=self.iou_threshold,
+            )
+            nms_scores, nms_class = classifications[0, anchors_nms_idx, :].max(dim=1)
+            return nms_scores, nms_class, transformed_anchors[0, anchors_nms_idx, :]
 
     def extract_feat(self, x: Tensor) -> t.List[Tensor]:
-        return [torch.empty(1, 128, 64, 64) for _ in range(8)]
+        features = [
+            torch.empty(1, 128, 1024 // (2 ** i), 1024 // (2 ** i)) for i in range(8)
+        ][-5:]
+        return self.neck(features)
