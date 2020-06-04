@@ -1,8 +1,6 @@
 import typer
-from .pipeline import eda_bboxes, train
+from .pipeline import train
 
 app = typer.Typer()
-
-app.command()(eda_bboxes)
 
 app.command()(train)

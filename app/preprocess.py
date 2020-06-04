@@ -36,25 +36,6 @@ def to_bbox(value: str) -> BBox:
     return BBox(*arr)
 
 
-def load_lables(limit: t.Union[None, int] = None) -> Images:
-    df = pd.read_csv(config.label_path, nrows=limit)
-    rows = df.to_dict("records")
-    images = pipe(
-        rows,
-        groupby(lambda x: x["image_id"]),
-        valmap(
-            lambda x: Image(
-                id=x[0]["image_id"],
-                source=x[0]["source"],
-                width=x[0]["width"],
-                height=x[0]["height"],
-                bboxes=[to_bbox(b["bbox"]) for b in x],
-            )
-        ),
-    )
-    return images
-
-
 def plot_with_bbox(image: Image) -> None:
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.grid(False)

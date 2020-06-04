@@ -1,4 +1,4 @@
-label_path = "/store/train.csv"
+kuzushiji_dir = "/store/train.csv"
 plot_dir = "/store/plot"
 image_dir = "/store/images"
 
