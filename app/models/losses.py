@@ -44,6 +44,7 @@ class FocalLoss(nn.Module):
         anchors: Tensor,
         annotations: Tensor,
     ) -> t.Tuple[Tensor, Tensor]:
+        device = classifications.device
         alpha = 0.25
         gamma = self.gamma
         batch_size = classifications.shape[0]
@@ -58,7 +59,6 @@ class FocalLoss(nn.Module):
         anchor_ctr_y = anchor[:, 1] + 0.5 * anchor_heights
 
         for j in range(batch_size):
-
             classification = classifications[j, :, :]
             regression = regressions[j, :, :]
 
@@ -66,40 +66,30 @@ class FocalLoss(nn.Module):
             bbox_annotation = bbox_annotation[bbox_annotation[:, 4] != -1]
 
             if bbox_annotation.shape[0] == 0:
-                regression_losses.append(torch.tensor(0).float().cuda())
-                classification_losses.append(torch.tensor(0).float().cuda())
-
+                regression_losses.append(torch.tensor(0).float().to(device))
+                classification_losses.append(torch.tensor(0).float().to(device))
                 continue
 
-            classification = torch.clamp(classification, 1e-4, 1.0 - 1e-4)
+            classification = torch.clamp(classification, 0, 1.0)
 
             # num_anchors x num_annotations
-            IoU = self.iou(anchors[0, :, :], bbox_annotation[:, :4])
-
-            IoU_max, IoU_argmax = torch.max(IoU, dim=1)  # num_anchors x 1
-
-            # import pdb
-            # pdb.set_trace()
+            iou = self.iou(anchors[0, :, :], bbox_annotation[:, :4])
+            iou_max, iou_argmax = torch.max(iou, dim=1)  # num_anchors x 1
 
             # compute the loss for classification
-            targets = torch.ones(classification.shape) * -1
-            targets = targets.cuda()
-
-            targets[torch.lt(IoU_max, 0.4), :] = 0
-
-            positive_indices = torch.ge(IoU_max, 0.5)
+            targets = (torch.ones(classification.shape) * -1).to(device)
+            targets[torch.lt(iou_max, 0.4), :] = 0
+            positive_indices = torch.ge(iou_max, 0.5)
 
             num_positive_anchors = positive_indices.sum()
-
-            assigned_annotations = bbox_annotation[IoU_argmax, :]
+            assigned_annotations = bbox_annotation[iou_argmax, :]
 
             targets[positive_indices, :] = 0
             targets[
                 positive_indices, assigned_annotations[positive_indices, 4].long()
             ] = 1
 
-            alpha_factor = torch.ones(targets.shape).cuda() * alpha
-
+            alpha_factor = torch.ones(targets.shape).to(device) * alpha
             alpha_factor = torch.where(
                 torch.eq(targets, 1.0), alpha_factor, 1.0 - alpha_factor
             )
@@ -113,11 +103,13 @@ class FocalLoss(nn.Module):
                 + (1.0 - targets) * torch.log(1.0 - classification)
             )
 
-            # cls_loss = focal_weight * torch.pow(bce, gamma)
+            #  cls_loss = focal_weight * torch.pow(bce, gamma)
             cls_loss = focal_weight * bce
 
             cls_loss = torch.where(
-                torch.ne(targets, -1.0), cls_loss, torch.zeros(cls_loss.shape).cuda()
+                torch.ne(targets, -1.0),
+                cls_loss,
+                torch.zeros(cls_loss.shape).to(device),
             )
 
             classification_losses.append(
@@ -151,7 +143,9 @@ class FocalLoss(nn.Module):
                 targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh))
                 targets = targets.t()
 
-                targets = targets / torch.tensor([[0.1, 0.1, 0.2, 0.2]]).cuda()
+                targets = targets / torch.tensor([[0.1, 0.1, 0.2, 0.2]]).to(
+                    targets.device
+                )
 
                 negative_indices = 1 + (~positive_indices)
 
@@ -164,7 +158,7 @@ class FocalLoss(nn.Module):
                 )
                 regression_losses.append(regression_loss.mean())
             else:
-                regression_losses.append(torch.tensor(0).float().cuda())
+                regression_losses.append(torch.tensor(0).float().to())
 
         return (
             torch.stack(classification_losses).mean(dim=0, keepdim=True),

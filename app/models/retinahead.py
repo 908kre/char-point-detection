@@ -1,3 +1,4 @@
+import torch
 import typing as t
 from functools import partial
 
@@ -9,12 +10,6 @@ from torch import Tensor
 from .utils import normal_init, bias_init_with_prob
 from six.moves import map, zip
 from .convbr import ConvBR2d
-
-
-def multi_apply(func: t.Any, *args: t.Any, **kwargs: t.Any) -> t.Tuple[t.Any, ...]:
-    pfunc = partial(func, **kwargs) if kwargs else func
-    map_results = map(pfunc, *args)
-    return tuple(map(list, zip(*map_results)))
 
 
 class RetinaHead(nn.Module):
@@ -87,17 +82,6 @@ class RetinaHead(nn.Module):
         )
         self.output_act = nn.Sigmoid()
 
-    def init_weights(self) -> None:
-        for m in self.cls_convs:
-            if isinstance(m.conv, nn.Module):
-                normal_init(m.conv, std=0.01)
-        for m in self.reg_convs:
-            if isinstance(m.conv, nn.Module):
-                normal_init(m.conv, std=0.01)
-        bias_cls = bias_init_with_prob(0.01)
-        normal_init(self.retina_cls, std=0.01, bias=bias_cls)
-        normal_init(self.retina_reg, std=0.01)
-
     def forward_single(self, x: Tensor) -> t.Tuple[Tensor, Tensor]:
         cls_feat = x
         reg_feat = x
@@ -121,5 +105,16 @@ class RetinaHead(nn.Module):
         bbox_pred = bbox_pred.contiguous().view(bbox_pred.size(0), -1, 4)
         return cls_score, bbox_pred
 
-    def forward(self, feats):  # type: ignore
-        return multi_apply(self.forward_single, feats)
+    def forward(self, feats: t.List[Tensor]) -> t.Tuple[Tensor, Tensor]:
+        """
+        all_anchors = len(feats) * num_anchors * w * h
+        return [B, all_anchors, num_classes], [B, all_anchors, 4]
+        """
+        cls_scores = []
+        bbox_preds = []
+        for i in feats:
+            c, b = self.forward_single(i)
+            cls_scores.append(c)
+            bbox_preds.append(b)
+
+        return torch.cat(cls_scores, dim=1), torch.cat(bbox_preds, dim=1)
