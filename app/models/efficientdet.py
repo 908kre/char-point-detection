@@ -11,7 +11,7 @@ from .bifpn import BiFPN
 
 #  from .efficientnet import EfficientNet
 from .retinahead import RetinaHead
-from .focalloss import FocalLoss
+from .losses import FocalLoss
 
 ModelName = t.Literal[
     "efficientdet-d0",
@@ -282,77 +282,8 @@ class EfficientDet(nn.Module):
         threshold: float = 0.01,
         iou_threshold: float = 0.5,
     ) -> None:
-        ...
         super().__init__()
-
-
-#          self.backbone = EfficientNet.from_pretrained(network)
-#  self.neck = BiFPN(
-#      in_channels=self.backbone.get_list_features()[-5:],
-#      out_channels=W_bifpn,
-#      stack=D_bifpn,
-#      num_outs=5,
-#  )
-#          self.bbox_head = RetinaHead(num_classes=num_classes, in_channels=W_bifpn)
-#
-#          self.anchors = Anchors()
-#          self.regressBoxes = BBoxTransform()
-#          self.clipBoxes = ClipBoxes()
-#          self.threshold = threshold
-#          self.iou_threshold = iou_threshold
-#          for m in self.modules():
-#              if isinstance(m, nn.Conv2d):
-#                  n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-#                  m.weight.data.normal_(0, math.sqrt(2.0 / n))
-#              elif isinstance(m, nn.BatchNorm2d):
-#                  m.weight.data.fill_(1)
-#                  m.bias.data.zero_()
-#          self.freeze_bn()
-#          self.criterion = FocalLoss()
-#
-#      def forward(self, inputs):  # type: ignore
-#          if self.is_training:
-#              inputs, annotations = inputs
-#          else:
-#              inputs = inputs
-#          x = self.extract_feat(inputs)
-#          outs = self.bbox_head(x)
-#          classification = torch.cat([out for out in outs[0]], dim=1)
-#          regression = torch.cat([out for out in outs[1]], dim=1)
-#          anchors = self.anchors(inputs)
-#          if self.is_training:
-#              return self.criterion(classification, regression, anchors, annotations)
-#          else:
-#              transformed_anchors = self.regressBoxes(anchors, regression)
-#              transformed_anchors = self.clipBoxes(transformed_anchors, inputs)
-#              scores = torch.max(classification, dim=2, keepdim=True)[0]
-#              scores_over_thresh = (scores > self.threshold)[0, :, 0]
-#
-#              if scores_over_thresh.sum() == 0:
-#                  print("No boxes to NMS")
-#                  # no boxes to NMS, just return
-#                  return [torch.zeros(0), torch.zeros(0), torch.zeros(0, 4)]
-#              classification = classification[:, scores_over_thresh, :]
-#              transformed_anchors = transformed_anchors[:, scores_over_thresh, :]
-#              scores = scores[:, scores_over_thresh, :]
-#              anchors_nms_idx = nms(
-#                  transformed_anchors[0, :, :],
-#                  scores[0, :, 0],
-#                  iou_threshold=self.iou_threshold,
-#              )
-#              nms_scores, nms_class = classification[0, anchors_nms_idx, :].max(dim=1)
-#              return [nms_scores, nms_class, transformed_anchors[0, anchors_nms_idx, :]]
-#
-#      def freeze_bn(self) -> None:
-#          """Freeze BatchNorm layers."""
-#          for layer in self.modules():
-#              if isinstance(layer, nn.BatchNorm2d):
-#                  layer.eval()
-#
-#      def extract_feat(self, img: Tensor) -> Tensor:
-#          """
-#              Directly extract features from the backbone+neck
-#          """
-#          x = self.backbone(img)
-#          x = self.neck(x[-5:])
-#          return x
+        self.anchors = Anchors()
+        self.clip_boxes = ClipBoxes()
+        self.threshold = threshold
+        self.iou_threshold = iou_threshold

@@ -5,40 +5,47 @@ import torch
 import torch.nn as nn
 
 
-def calc_iou(a: Tensor, b: Tensor) -> Tensor:
-    area = (b[:, 2] - b[:, 0]) * (b[:, 3] - b[:, 1])
+class BBoxIoU(nn.Module):
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        """
+        x: [Bx, 4], bbox, xyxy
+        y: [By, 4], bbox, xyxy
+        return: [Bx, By]
+        """
 
-    iw = torch.min(torch.unsqueeze(a[:, 2], dim=1), b[:, 2]) - torch.max(
-        torch.unsqueeze(a[:, 0], 1), b[:, 0]
-    )
-    ih = torch.min(torch.unsqueeze(a[:, 3], dim=1), b[:, 3]) - torch.max(
-        torch.unsqueeze(a[:, 1], 1), b[:, 1]
-    )
+        iw = (
+            torch.min(torch.unsqueeze(x[:, 2], dim=1), y[:, 2])
+            - torch.max(torch.unsqueeze(x[:, 0], 1), y[:, 0])
+        ).clamp(min=0)
+        ih = (
+            torch.min(torch.unsqueeze(x[:, 3], dim=1), y[:, 3])
+            - torch.max(torch.unsqueeze(x[:, 1], 1), y[:, 1])
+        ).clamp(min=0)
 
-    iw = torch.clamp(iw, min=0)
-    ih = torch.clamp(ih, min=0)
+        intersection = iw * ih
+        y_area = (y[:, 2] - y[:, 0]) * (y[:, 3] - y[:, 1])
+        x_area = (x[:, 2] - x[:, 0]) * (x[:, 3] - x[:, 1])
+        union = (torch.unsqueeze(x_area, dim=1) + y_area - intersection).clamp(min=0)
 
-    ua = (
-        torch.unsqueeze((a[:, 2] - a[:, 0]) * (a[:, 3] - a[:, 1]), dim=1)
-        + area
-        - iw * ih
-    )
-
-    ua = torch.clamp(ua, min=1e-8)
-
-    intersection = iw * ih
-
-    iou = intersection / ua
-
-    return iou
+        iou = intersection / union
+        return iou
 
 
 class FocalLoss(nn.Module):
-    def forward(  # type:ignore
-        self, classifications, regressions, anchors, annotations
-    ):
+    def __init__(self, gamma: float = 2.0) -> None:
+        super().__init__()
+        self.gamma = gamma
+        self.iou = BBoxIoU()
+
+    def forward(
+        self,
+        classifications: Tensor,  # [B, C, ?]
+        regressions: Tensor,
+        anchors: Tensor,
+        annotations: Tensor,
+    ) -> t.Tuple[Tensor, Tensor]:
         alpha = 0.25
-        gamma = 2.0
+        gamma = self.gamma
         batch_size = classifications.shape[0]
         classification_losses = []
         regression_losses = []
@@ -67,7 +74,7 @@ class FocalLoss(nn.Module):
             classification = torch.clamp(classification, 1e-4, 1.0 - 1e-4)
 
             # num_anchors x num_annotations
-            IoU = calc_iou(anchors[0, :, :], bbox_annotation[:, :4])
+            IoU = self.iou(anchors[0, :, :], bbox_annotation[:, :4])
 
             IoU_max, IoU_argmax = torch.max(IoU, dim=1)  # num_anchors x 1
 
@@ -144,7 +151,7 @@ class FocalLoss(nn.Module):
                 targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh))
                 targets = targets.t()
 
-                targets = targets / torch.Tensor([[0.1, 0.1, 0.2, 0.2]]).cuda()
+                targets = targets / torch.tensor([[0.1, 0.1, 0.2, 0.2]]).cuda()
 
                 negative_indices = 1 + (~positive_indices)
 
