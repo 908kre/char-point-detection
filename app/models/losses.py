@@ -32,9 +32,10 @@ class BBoxIoU(nn.Module):
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, gamma: float = 2.0) -> None:
+    def __init__(self, gamma: float = 2.0, alpha: float = 0.25) -> None:
         super().__init__()
         self.gamma = gamma
+        self.alpha = alpha
         self.iou = BBoxIoU()
 
     def forward(
@@ -45,8 +46,6 @@ class FocalLoss(nn.Module):
         annotations: Tensor,
     ) -> t.Tuple[Tensor, Tensor]:
         device = classifications.device
-        alpha = 0.25
-        gamma = self.gamma
         batch_size = classifications.shape[0]
         classification_losses = []
         regression_losses = []
@@ -89,14 +88,14 @@ class FocalLoss(nn.Module):
                 positive_indices, assigned_annotations[positive_indices, 4].long()
             ] = 1
 
-            alpha_factor = torch.ones(targets.shape).to(device) * alpha
+            alpha_factor = torch.ones(targets.shape).to(device) * self.alpha
             alpha_factor = torch.where(
                 torch.eq(targets, 1.0), alpha_factor, 1.0 - alpha_factor
             )
             focal_weight = torch.where(
                 torch.eq(targets, 1.0), 1.0 - classification, classification
             )
-            focal_weight = alpha_factor * torch.pow(focal_weight, gamma)
+            focal_weight = alpha_factor * torch.pow(focal_weight, self.gamma)
 
             bce = -(
                 targets * torch.log(classification)
