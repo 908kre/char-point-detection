@@ -11,19 +11,22 @@ import matplotlib.patches as mpatches
 
 
 def plot_bboxes(bboxes: BBoxes, path: str) -> None:
-    fig, axs = plt.subplots(3, sharex=True)
+    fig, axs = plt.subplots(4, sharex=True)
     sizes = [b.size() for b in bboxes]
     axs[0].hist([b.w for b in bboxes], bins=100)
     axs[0].set_ylabel("w")
     axs[1].hist([b.h for b in bboxes], bins=100)
     axs[1].set_ylabel("h")
+
+    axs[2].hist([b.h / b.w for b in bboxes], bins=100)
+    axs[2].set_ylabel("aspect")
     blank_img = np.zeros((1024, 1024))
-    axs[2].imshow(blank_img)
+    axs[3].imshow(blank_img)
     for bbox in bboxes:
         rect = mpatches.Rectangle(
             (0, 0), bbox.w, bbox.h, fill=False, edgecolor="red", linewidth=1,
         )
-        axs[2].add_patch(rect)
+        axs[3].add_patch(rect)
     plt.savefig(Path(config.plot_dir).joinpath(path))
     plt.close()
 

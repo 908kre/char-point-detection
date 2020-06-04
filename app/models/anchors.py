@@ -10,13 +10,11 @@ class Anchors(nn.Module):
         pyramid_levels: t.List[int] = [3, 4, 5, 6, 7],
         ratios: t.List[float] = [0.5, 1, 2],
         scales: t.List[float] = [2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)],
-        stride: t.Literal[2, 3, 4] = 2,
-        size: int = 2,
     ) -> None:
         super().__init__()
         self.pyramid_levels = pyramid_levels
-        self.strides = [stride ** x for x in self.pyramid_levels]
-        self.sizes = [size ** (x + 2) for x in self.pyramid_levels]
+        self.strides = [2 ** x for x in self.pyramid_levels]
+        self.sizes = [2 ** (x + 2) for x in self.pyramid_levels]
         self.ratios = ratios
         self.scales = scales
 
@@ -28,18 +26,22 @@ class Anchors(nn.Module):
 
         image_shape = image.shape[2:]
         image_shape = np.array(image_shape)
-        image_shapes = [
+        feature_shapes = [
             (image_shape + 2 ** x - 1) // (2 ** x) for x in self.pyramid_levels
         ]
+        print(feature_shapes)
 
         # compute anchors over all pyramid levels
         all_anchors = np.zeros((0, 4)).astype(np.float32)
 
-        for idx, p in enumerate(self.pyramid_levels):
+        for feature_shape, size, stride in zip(
+            feature_shapes, self.sizes, self.strides,
+        ):
             anchors = generate_anchors(
-                base_size=self.sizes[idx], ratios=self.ratios, scales=self.scales
+                base_size=size, ratios=self.ratios, scales=self.scales
             )
-            shifted_anchors = shift(image_shapes[idx], self.strides[idx], anchors)
+            print(anchors)
+            shifted_anchors = shift(feature_shape, stride, anchors)
             all_anchors = np.append(all_anchors, shifted_anchors, axis=0)
 
         all_anchors = np.expand_dims(all_anchors, axis=0)
@@ -72,9 +74,7 @@ def shift(shape: t.Any, stride: int, anchors: t.Any) -> t.Any:
 
 
 def generate_anchors(
-    base_size: int = 16,
-    ratios: t.List[float] = [0.5, 1, 2],
-    scales: t.List[float] = [2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)],
+    base_size: int, ratios: t.List[float], scales: t.List[float],
 ) -> t.Any:
     """
     Generate anchor (reference) windows by enumerating aspect ratios X

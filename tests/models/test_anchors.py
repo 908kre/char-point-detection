@@ -8,10 +8,10 @@ from app.models.efficientdet import Anchors
 
 def test_anchors() -> None:
     scales = [1.0]
-    ratios = [1.0]
+    ratios = [0.5, 1.0, 2]
 
-    images = torch.ones((1, 1, 32, 32))
-    fn = Anchors(pyramid_levels=[1], scales=scales, ratios=ratios, stride=4)
+    images = torch.ones((1, 1, 1024, 1024))
+    fn = Anchors(pyramid_levels=[6], scales=scales, ratios=ratios)
     res = fn(images)
 
     _, ax = plt.subplots(figsize=(6, 6))
@@ -25,7 +25,7 @@ def test_anchors() -> None:
         marker=".",
         c="r",
     )
-    for offset, color in [(0, "red"), (8, "blue")]:
+    for offset, color in [(0, "red"), (1, "blue")]:
         for bbox in res[0][unit * offset : unit * (offset + 1)]:
             bbox = bbox.numpy()
             rect = mpatches.Rectangle(
@@ -39,6 +39,5 @@ def test_anchors() -> None:
             ax.add_patch(rect)
 
     plt.savefig(Path(config.plot_dir).joinpath(f"test-anchor.png"))
-    print(res)
     #  print(res.shape)
     #  assert res.shape == (1, 9 * 4, 4)
