@@ -13,7 +13,6 @@ setup(
         "scikit-learn",
         "cytoolz",
         "matplotlib",
-        "seaborn",
         "torch",
         "kaggle",
         "tqdm",
