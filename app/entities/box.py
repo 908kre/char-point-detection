@@ -22,8 +22,16 @@ def yoyo_to_pascal(x: CoCoBoxes, size: t.Tuple[int, int]) -> YoloBoxes:
     ...
 
 
-def coco_to_yolo(x: CoCoBoxes, size: t.Tuple[int, int]) -> YoloBoxes:
-    ...
+def coco_to_yolo(coco: CoCoBoxes, size: t.Tuple[int, int]) -> YoloBoxes:
+    size_w, size_h = size
+    x0, y0, x1, y1 = coco_to_pascal(coco).unbind(-1)
+    b = [
+        (x0 + x1) / 2 / size_w,
+        (y0 + y1) / 2 / size_h,
+        (x1 - x0) / size_w,
+        (y1 - y0) / size_h,
+    ]
+    return YoloBoxes(torch.stack(b, dim=-1))
 
 
 def coco_to_pascal(coco: CoCoBoxes) -> PascalBoxes:

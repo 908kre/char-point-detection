@@ -11,13 +11,25 @@ from .modules import ConvBR2d
 from .bottlenecks import SENextBottleneck2d
 from .bifpn import BiFPN, FP
 from .backbones import EfficientNetBackbone, ResNetBackbone
-from app.entities import ImageBatch, PredBoxes, Image
+from app.entities import ImageBatch, PredBoxes, Image, Batch
 from torchvision.ops import nms
 
 from pathlib import Path
 import albumentations as albm
 
 logger = getLogger(__name__)
+
+
+def collate_fn(batch: Batch) -> t.Tuple[ImageBatch, t.List[YoloBoxes], t.List[str]]:
+    images: t.List[t.Any] = []
+    id_batch: t.List[str] = []
+    box_batch: t.List[YoloBoxes] = []
+
+    for id, img, boxes in batch:
+        images.append(img)
+        box_batch.append(boxes)
+        id_batch.append(id)
+    return ImageBatch(torch.stack(images)), box_batch, id_batch
 
 
 class Reg(nn.Module):
@@ -184,3 +196,24 @@ class SoftHeatMap:
                 mount = torch.max(mount, target)
                 heatmap[:, :, y0:y1, x0:x1] = mount  # type: ignore
         return Heatmap(heatmap), Sizemap(sizemap)
+
+
+class PreProcess:
+    def __init__(self,) -> None:
+        super().__init__()
+        self.heatmap = SoftHeatMap()
+
+    def __call__(
+        self, batch: t.Tuple[ImageBatch, t.List[YoloBoxes]]
+    ) -> t.Tuple[ImageBatch, NetOutput]:
+        image_batch, boxes_batch = batch
+        hms: t.List[t.Any] = []
+        sms: t.List[t.Any] = []
+        for img, boxes in zip(image_batch.unbind(0), boxes_batch):
+            hm, sm = self.heatmap(boxes, ref_image=Image(img))
+            hms.append(hm)
+            sms.append(sm)
+
+        heatmap = torch.cat(hms, dim=0)
+        sizemap = torch.cat(sms, dim=0)
+        return image_batch, (Heatmap(heatmap), Sizemap(sizemap))

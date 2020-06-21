@@ -9,3 +9,6 @@ lr = 1e-4
 n_splits = 5
 seed = 777
 device = "cuda"
+
+batch_size = 8
+num_workers = 8
