@@ -5,6 +5,7 @@ import matplotlib.patches as mpatches
 from pathlib import Path
 
 from torch import Tensor
+from app.entities import CoCoBoxes
 
 
 class DetectionPlot:
@@ -33,7 +34,7 @@ class DetectionPlot:
 
     def with_boxes(
         self,
-        boxes: Tensor,
+        boxes: CoCoBoxes,
         probs: t.Optional[Tensor] = None,
         color: str = "black",
         fontsize: int = 7,

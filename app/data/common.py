@@ -5,15 +5,16 @@ import cv2
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
+from app.entities import CoCoBoxes, Image, Labels
 
 
 class Sample:
     id: str
-    image: Tensor
-    boxes: Tensor
-    labels: Tensor
+    image: Image
+    boxes: CoCoBoxes
+    labels: Labels
 
-    def __init__(self, id: str, image: Tensor, boxes: Tensor, labels: Tensor) -> None:
+    def __init__(self, id: str, image: Image, boxes: CoCoBoxes, labels: Labels) -> None:
         self.id = id
         self.image = image
         self.boxes = boxes

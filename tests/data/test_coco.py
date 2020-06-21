@@ -11,7 +11,7 @@ def test_CocoDataset() -> None:
     )
     sample = dataset[0]
     image = torch.from_numpy(sample.image).permute(2, 0, 1)
-    boxes = torch.from_numpy(sample.boxes)
+    boxes = sample.boxes
     plot = DetectionPlot(figsize=(10, 10))
     plot.with_image(image)
     plot.with_boxes(boxes)
