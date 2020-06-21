@@ -7,7 +7,6 @@ import albumentations as albm
 
 
 class MakeMap(albm.BasicTransform):
-
     def __init__(self, alpha=2e-3, always_apply=False, p=1.0):
         super().__init__(always_apply, p)
         self.alpha = alpha
@@ -15,7 +14,8 @@ class MakeMap(albm.BasicTransform):
     def __call__(self, force_apply=True, **kwargs):
         sample = kwargs.copy()
         hm, size, off = make_map(
-            sample["image"].shape, sample["bboxes"], alpha=self.alpha)
+            sample["image"].shape, sample["bboxes"], alpha=self.alpha
+        )
         sample["hm"] = hm
         sample["size"] = size
         sample["off"] = off
@@ -47,7 +47,6 @@ def make_map(image_shape, bboxes, alpha=2e-3):
 
 
 class RandomDilateErode(albm.ImageOnlyTransform):
-
     def __init__(self, ks_limit=(1, 5), always_apply=False, p=1.0):
         super().__init__(always_apply, p)
         self.ks_limit = ks_limit
@@ -62,7 +61,7 @@ class RandomDilateErode(albm.ImageOnlyTransform):
     def get_params(self):
         return {
             "ks": (random.randint(*self.ks_limit), random.randint(*self.ks_limit)),
-            "dilate": random.randint(0, 1)
+            "dilate": random.randint(0, 1),
         }
 
     def get_transform_init_args_names(self):
@@ -70,12 +69,13 @@ class RandomDilateErode(albm.ImageOnlyTransform):
 
 
 class RandomRuledLines(albm.ImageOnlyTransform):
-
     def __init__(self, lines_limit=(30, 60), always_apply=False, p=0.5):
         super().__init__(always_apply, p)
         self.lines_limit = lines_limit
 
-    def apply(self, img, num_lines: int, orientation: int, phase: float, color: int, **params):
+    def apply(
+        self, img, num_lines: int, orientation: int, phase: float, color: int, **params
+    ):
         img = img.copy()
         cols, rows = params["cols"], params["rows"]
         longer_side = max(cols, rows)
@@ -88,13 +88,17 @@ class RandomRuledLines(albm.ImageOnlyTransform):
             while pos < rows:
                 pt1 = (0, pos)
                 pt2 = (cols, pos)
-                img = cv2.line(img, pt1, pt2, color, thickness=thickness, lineType=cv2.LINE_4)
+                img = cv2.line(
+                    img, pt1, pt2, color, thickness=thickness, lineType=cv2.LINE_4
+                )
                 pos += spacing
         else:  # vertical
             while pos < cols:
                 pt1 = (pos, 0)
                 pt2 = (pos, rows)
-                img = cv2.line(img, pt1, pt2, color, thickness=thickness, lineType=cv2.LINE_4)
+                img = cv2.line(
+                    img, pt1, pt2, color, thickness=thickness, lineType=cv2.LINE_4
+                )
                 pos += spacing
         return img
 
@@ -103,7 +107,7 @@ class RandomRuledLines(albm.ImageOnlyTransform):
             "num_lines": random.randint(*self.lines_limit),
             "orientation": random.randint(0, 1),
             "phase": random.random(),
-            "color": random.randint(0, 64)
+            "color": random.randint(0, 64),
         }
 
     def get_transform_init_args_names(self):
@@ -111,8 +115,9 @@ class RandomRuledLines(albm.ImageOnlyTransform):
 
 
 class RandomLayout(albm.DualTransform):
-
-    def __init__(self, width: int, height: int, size_limit=(0.5, 1.0), always_apply=False, p=1.0):
+    def __init__(
+        self, width: int, height: int, size_limit=(0.5, 1.0), always_apply=False, p=1.0
+    ):
         super().__init__(always_apply, p)
         self.width = width
         self.height = height
@@ -123,19 +128,22 @@ class RandomLayout(albm.DualTransform):
         height = self.height * size[1]
         offset_x = self.width * offset[0]
         offset_y = self.height * offset[1]
-        pts1 = np.float32([
-            [0, 0],
-            [0, img.shape[0]],
-            [img.shape[1], 0]
-        ])
-        pts2 = np.float32([
-            [offset_x, offset_y],
-            [offset_x, offset_y + height],
-            [offset_x + width, offset_y],
-        ])
+        pts1 = np.float32([[0, 0], [0, img.shape[0]], [img.shape[1], 0]])
+        pts2 = np.float32(
+            [
+                [offset_x, offset_y],
+                [offset_x, offset_y + height],
+                [offset_x + width, offset_y],
+            ]
+        )
         return cv2.warpAffine(
-            img, cv2.getAffineTransform(pts1, pts2), (self.width, self.height),
-            flags=cv2.INTER_AREA, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            img,
+            cv2.getAffineTransform(pts1, pts2),
+            (self.width, self.height),
+            flags=cv2.INTER_AREA,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=0,
+        )
 
     def apply_to_bbox(self, bbox, size, offset, **params):
         x1, y1, x2, y2 = bbox
@@ -151,15 +159,14 @@ class RandomLayout(albm.DualTransform):
 
     def get_params_dependent_on_targets(self, params):
         image = params["image"]
-        scale = min(self.height / image.shape[0], self.width / image.shape[1]) * random.uniform(*self.size_limit)
+        scale = min(
+            self.height / image.shape[0], self.width / image.shape[1]
+        ) * random.uniform(*self.size_limit)
         size_x = image.shape[1] * scale / self.width
         size_y = image.shape[0] * scale / self.height
         offset_x = random.uniform(0, 1.0 - size_x)
         offset_y = random.uniform(0, 1.0 - size_y)
-        return {
-            "size": (size_x, size_y),
-            "offset": (offset_x, offset_y)
-        }
+        return {"size": (size_x, size_y), "offset": (offset_x, offset_y)}
 
     def get_params(self):
         return {}

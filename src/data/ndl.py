@@ -6,7 +6,6 @@ from .imagefile import ImageFileDataset
 
 
 class NDLDataSet(Dataset):
-
     def __init__(self, image_dir, annot_dir, transforms=None):
         self.image_dataset = ImageFileDataset(image_dir, ".jpg")
         annot_files = sorted(Path(annot_dir).glob("*.json"))

@@ -34,15 +34,21 @@ def main():
             for i in range(num_samples):
                 image_id = batch["image_id"][i]
                 image_size = batch["image_size"][i]
-                boxes, scores = get_bboxes(y["hm"][i], y["size"][i], y["off"][i], args.score_threshold)
+                boxes, scores = get_bboxes(
+                    y["hm"][i], y["size"][i], y["off"][i], args.score_threshold
+                )
                 keep = nms(coco_to_pascal(boxes), scores, args.nms_threshold)
-                boxes = restore_boxes(image_size, args.input_size, boxes[keep].cpu().numpy())
+                boxes = restore_boxes(
+                    image_size, args.input_size, boxes[keep].cpu().numpy()
+                )
                 scores = scores[keep].cpu().numpy()
-                results.append({
-                    "image_id": image_id,
-                    "boxes": boxes.tolist(),
-                    "scores": scores.tolist()
-                })
+                results.append(
+                    {
+                        "image_id": image_id,
+                        "boxes": boxes.tolist(),
+                        "scores": scores.tolist(),
+                    }
+                )
     with open(args.output_file, "w") as fp:
         json.dump(results, fp)
 
@@ -55,23 +61,26 @@ def restore_boxes(src_size, dst_size, boxes):
 
 
 def get_loader(image_dir: str, input_size: int, batch_size: int):
-    transforms = albm.Compose([
-        albm.LongestMaxSize(input_size),
-        albm.PadIfNeeded(
-            input_size, input_size,
-            border_mode=cv2.BORDER_CONSTANT, value=0),
-        albm.Normalize(**NORMALIZE_PARAMS),
-        albm_torch.ToTensorV2()
-    ])
-    dataset = ImageDataset(
-        image_dir,
-        transforms=lambda x: transforms(**x)
+    transforms = albm.Compose(
+        [
+            albm.LongestMaxSize(input_size),
+            albm.PadIfNeeded(
+                input_size, input_size, border_mode=cv2.BORDER_CONSTANT, value=0
+            ),
+            albm.Normalize(**NORMALIZE_PARAMS),
+            albm_torch.ToTensorV2(),
+        ]
     )
+    dataset = ImageDataset(image_dir, transforms=lambda x: transforms(**x))
     return DataLoader(
         dataset,
-        batch_size=batch_size, drop_last=False, shuffle=False,
+        batch_size=batch_size,
+        drop_last=False,
+        shuffle=False,
         collate_fn=collate_fn,
-        num_workers=10, pin_memory=True)
+        num_workers=10,
+        pin_memory=True,
+    )
 
 
 def parse_args():

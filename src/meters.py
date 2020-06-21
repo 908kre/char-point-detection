@@ -4,7 +4,6 @@ import numpy as np
 
 
 class EMAMeter:
-
     def __init__(self, alpha=0.99):
         self.alpha = alpha
         self.ema = np.nan
@@ -23,7 +22,6 @@ class EMAMeter:
 
 
 class MeanMeter:
-
     def __init__(self):
         self.sum = 0.0
         self.count = 0.0
@@ -41,8 +39,7 @@ class MeanMeter:
 
 
 class BestWatcher:
-
-    def __init__(self, mode="min", min_delta=0., ema=False, alpha=1.):
+    def __init__(self, mode="min", min_delta=0.0, ema=False, alpha=1.0):
         self.mode = mode
         self.min_delta = min_delta
         self.ema = ema

@@ -10,16 +10,18 @@ from torch.utils.data import Dataset
 import albumentations as albm
 from .common import imread
 
-class ImageFileDataset(Dataset):
 
-    def __init__(self, image_dir: str, suffix: str = ".jpg", transforms = None):
+class ImageFileDataset(Dataset):
+    def __init__(self, image_dir: str, suffix: str = ".jpg", transforms=None):
         self.image_dir = Path(image_dir)
         self.suffix = suffix
         self.transforms = transforms
-        self.image_ids = sorted([
-            str(_.relative_to(self.image_dir))
-            for _ in self.image_dir.glob("**/*" + self.suffix)
-        ])
+        self.image_ids = sorted(
+            [
+                str(_.relative_to(self.image_dir))
+                for _ in self.image_dir.glob("**/*" + self.suffix)
+            ]
+        )
         self.index = {image_id: idx for idx, image_id in enumerate(self.image_ids)}
 
     def __getitem__(self, idx):

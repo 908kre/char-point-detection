@@ -4,7 +4,6 @@ import torch.nn.functional as F
 
 
 class CenterNetDetector(nn.Module):
-
     def __init__(self, backbone: nn.Module, fusion: nn.Module, hidden_channels=64):
         super().__init__()
         self.backbone = backbone
@@ -23,7 +22,6 @@ class CenterNetDetector(nn.Module):
 
 
 class PointwiseRegressor(nn.Module):
-
     def __init__(self, in_channels=1024, hidden_channels=64, out_channels=1):
         super().__init__()
         self.conv = nn.Conv2d(in_channels, hidden_channels, 3, padding=1)
@@ -56,10 +54,7 @@ def get_bboxes(hm, size, off, score_threshold, limit=5000):
     offsets = off[:, indices[:, 0], indices[:, 1]].t()  # dcx, dcy
     loc = (indices.flip(1) + offsets.clamp(0, 1)) * 4  # cx, cy
     sizes = size[:, indices[:, 0], indices[:, 1]].t()  # w, h
-    bb = torch.cat([
-        loc - sizes / 2,  # cx, cy -> x, y
-        sizes  # w, h
-    ], dim=1)
+    bb = torch.cat([loc - sizes / 2, sizes], dim=1)  # cx, cy -> x, y  # w, h
     confidences.append(confidences_)
     bboxes.append(bb)
     return torch.cat(bboxes), torch.cat(confidences)

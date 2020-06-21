@@ -8,7 +8,6 @@ import torch
 
 
 class NullSaver:
-
     def __init__(self):
         self.enabled = True
 
@@ -17,9 +16,20 @@ class NullSaver:
 
 
 class BestModelSaver:
-
-    def __init__(self, model, metric_name="loss", num_checkpoints=3, wait=5, checkpoint_path=None,
-                 mode="min", min_delta=0., ema=False, alpha=1., verbose=True, enabled=True):
+    def __init__(
+        self,
+        model,
+        metric_name="loss",
+        num_checkpoints=3,
+        wait=5,
+        checkpoint_path=None,
+        mode="min",
+        min_delta=0.0,
+        ema=False,
+        alpha=1.0,
+        verbose=True,
+        enabled=True,
+    ):
         self.model = model
         self.metric_name = metric_name
         self.num_checkpoints = num_checkpoints
@@ -57,11 +67,15 @@ class BestModelSaver:
                 self._update_current(epoch, value, metrics)
                 updated = True
             else:
-                history = sorted(self.history, key=lambda _: _.value, reverse=self.mode != "min")
+                history = sorted(
+                    self.history, key=lambda _: _.value, reverse=self.mode != "min"
+                )
                 worst = history[-1]
                 if self.op(value - self.min_delta, worst.value):
                     if self.verbose:
-                        print(f"[{self.metric_name}] delete checkpoint: epoch={worst.epoch}, value={worst.value:.3f}")
+                        print(
+                            f"[{self.metric_name}] delete checkpoint: epoch={worst.epoch}, value={worst.value:.3f}"
+                        )
                     worst.delete()
                     self.history = history[:-1]
                     self._update_current(epoch, value, metrics)
@@ -71,14 +85,22 @@ class BestModelSaver:
             updated = True
         return updated
 
-    def _update_current(self, epoch: int, value: float, metrics: dict=None):
+    def _update_current(self, epoch: int, value: float, metrics: dict = None):
         if self.current is not None:
             if self.verbose:
-                print(f"[{self.metric_name}] delete checkpoint: epoch={self.current.epoch}, value={self.current.value:.3f}")
+                print(
+                    f"[{self.metric_name}] delete checkpoint: epoch={self.current.epoch}, value={self.current.value:.3f}"
+                )
             self.current.delete()
         if self.verbose:
-            print(f"[{self.metric_name}] new checkpoint: epoch={epoch}, value={value:.3f}")
-        path = Path(self.checkpoint_path.format(epoch=epoch)) if self.checkpoint_path is not None else None
+            print(
+                f"[{self.metric_name}] new checkpoint: epoch={epoch}, value={value:.3f}"
+            )
+        path = (
+            Path(self.checkpoint_path.format(epoch=epoch))
+            if self.checkpoint_path is not None
+            else None
+        )
         stat = self.model.state_dict()
         checkpoint = CheckPoint(epoch, value, stat, path, metrics)
         checkpoint.save()
@@ -86,14 +108,15 @@ class BestModelSaver:
 
 
 class CheckPoint:
-
-    def __init__(self, epoch: int, value: float, weights: dict, path: Path, metrics: dict=None):
+    def __init__(
+        self, epoch: int, value: float, weights: dict, path: Path, metrics: dict = None
+    ):
         self.epoch = epoch
         self.value = value
         self.weights = weights
         self.path = path
         self.metrics = metrics
-    
+
     def save(self, path=None):
         if path is None:
             path = self.path
@@ -101,8 +124,8 @@ class CheckPoint:
             path.parent.mkdir(parents=True, exist_ok=True)
             torch.save(self.weights, path)
             _save_json(
-                self.metrics.update(dict(epoch=self.epoch)),
-                self._metrics_path(path))
+                self.metrics.update(dict(epoch=self.epoch)), self._metrics_path(path)
+            )
 
     def delete(self):
         if self.path is not None:

@@ -13,7 +13,6 @@ def focal_loss(pred, gt, alpha=2.0, beta=4.0):
 
 
 class FocalLoss(nn.Module):
-
     def __init__(self, alpha=2.0, beta=4.0):
         super().__init__()
         self.alpha = alpha
@@ -24,7 +23,6 @@ class FocalLoss(nn.Module):
 
 
 class FocalLossWithLogits(nn.Module):
-
     def __init__(self, alpha=2.0, beta=4.0):
         super().__init__()
         self.alpha = alpha

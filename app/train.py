@@ -17,7 +17,6 @@ class Trainer:
     def train(self, num_epochs: int) -> None:
         for epoch in range(num_epochs):
             self.train_one_epoch()
-            logger.info(f"{epoch=}")
 
     def train_one_epoch(self) -> None:
         ...

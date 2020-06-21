@@ -45,7 +45,7 @@ class Image:
 
     def __repr__(self,) -> str:
         id = self.id
-        return f"<Image {id=}>"
+        return f"<Image id={self.id}>"
 
     def get_arr(self) -> t.Any:
         image_path = Path(config.image_dir).joinpath(f"{self.id}.jpg")

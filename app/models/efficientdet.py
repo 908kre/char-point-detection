@@ -16,16 +16,16 @@ from .anchors import Anchors
 
 logger = getLogger(__name__)
 
-ModelName = t.Literal[
-    "efficientdet-d0",
-    "efficientdet-d1",
-    "efficientdet-d2",
-    "efficientdet-d3",
-    "efficientdet-d4",
-    "efficientdet-d5",
-    "efficientdet-d6",
-    "efficientdet-d7",
-]
+#  ModelName = t.Literal[
+#      "efficientdet-d0",
+#      "efficientdet-d1",
+#      "efficientdet-d2",
+#      "efficientdet-d3",
+#      "efficientdet-d4",
+#      "efficientdet-d5",
+#      "efficientdet-d6",
+#      "efficientdet-d7",
+#  ]
 
 
 class BBoxTransform(nn.Module):
@@ -176,7 +176,7 @@ class EfficientDet(nn.Module):
     def __init__(
         self,
         num_classes: int,
-        network: ModelName = "efficientdet-d0",
+        network: str = "efficientdet-d0",
         D_bifpn: int = 3,
         W_bifpn: int = 88,
         D_class: int = 3,

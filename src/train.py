@@ -19,8 +19,13 @@ import albumentations.pytorch as albm_torch
 from tqdm import tqdm
 from .losses.focal_loss import FocalLossWithLogits
 from .config import (
-    TrainConfig, ModelConfig, DataConfig, DatasetConfig,
-    OptimizerConfig, SchedulerConfig, ValidConfig
+    TrainConfig,
+    ModelConfig,
+    DataConfig,
+    DatasetConfig,
+    OptimizerConfig,
+    SchedulerConfig,
+    ValidConfig,
 )
 from .models import get_model
 from .models.ctdet import get_bboxes
@@ -41,66 +46,82 @@ def init_seed(seed):
 
 def get_loaders(config: DataConfig):
 
-    train_dataset = ConcatDataset([
-        get_dataset(c.name, c.image, c.annot)
-        for c in config.train_datasets
-    ])
+    train_dataset = ConcatDataset(
+        [get_dataset(c.name, c.image, c.annot) for c in config.train_datasets]
+    )
 
-    val_dataset = ConcatDataset([
-        get_dataset(c.name, c.image, c.annot)
-        for c in config.val_datasets
-    ])
+    val_dataset = ConcatDataset(
+        [get_dataset(c.name, c.image, c.annot) for c in config.val_datasets]
+    )
 
-    train_transforms = albm.Compose([
-        albm.LongestMaxSize(config.input_size),
-        albm.PadIfNeeded(
-            config.input_size, config.input_size,
-            border_mode=cv2.BORDER_CONSTANT, value=0),
-        albm.VerticalFlip(),
-        albm.RandomRotate90(),
-        MakeMap(config.hm_alpha),
-        albm.Normalize(**NORMALIZE_PARAMS),
-        albm_torch.ToTensorV2()
-    ], bbox_params={"format": "coco", "label_fields": ["labels"]})
+    train_transforms = albm.Compose(
+        [
+            albm.LongestMaxSize(config.input_size),
+            albm.PadIfNeeded(
+                config.input_size,
+                config.input_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=0,
+            ),
+            albm.VerticalFlip(),
+            albm.RandomRotate90(),
+            MakeMap(config.hm_alpha),
+            albm.Normalize(**NORMALIZE_PARAMS),
+            albm_torch.ToTensorV2(),
+        ],
+        bbox_params={"format": "coco", "label_fields": ["labels"]},
+    )
 
-    val_transforms = albm.Compose([
-        albm.LongestMaxSize(config.input_size),
-        albm.PadIfNeeded(
-            config.input_size, config.input_size,
-            border_mode=cv2.BORDER_CONSTANT, value=0),
-        MakeMap(config.hm_alpha),
-        albm.Normalize(**NORMALIZE_PARAMS),
-        albm_torch.ToTensorV2()
-    ], bbox_params={"format": "coco", "label_fields": ["labels"]})
+    val_transforms = albm.Compose(
+        [
+            albm.LongestMaxSize(config.input_size),
+            albm.PadIfNeeded(
+                config.input_size,
+                config.input_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=0,
+            ),
+            MakeMap(config.hm_alpha),
+            albm.Normalize(**NORMALIZE_PARAMS),
+            albm_torch.ToTensorV2(),
+        ],
+        bbox_params={"format": "coco", "label_fields": ["labels"]},
+    )
 
     train_dataset = Transformed(
-        train_dataset,
-        transforms=Lambda(lambda _: train_transforms(**_)))
+        train_dataset, transforms=Lambda(lambda _: train_transforms(**_))
+    )
 
     val_dataset = Transformed(
-        val_dataset,
-        transforms=Lambda(lambda _: val_transforms(**_)))
+        val_dataset, transforms=Lambda(lambda _: val_transforms(**_))
+    )
 
     train_loader = DataLoader(
         train_dataset,
-        batch_size=config.batch_size, drop_last=True, shuffle=True,
+        batch_size=config.batch_size,
+        drop_last=True,
+        shuffle=True,
         collate_fn=collate_fn,
         worker_init_fn=lambda worker_id: init_seed(config.seed + worker_id),
-        num_workers=10, pin_memory=True)
+        num_workers=10,
+        pin_memory=True,
+    )
 
     val_loader = DataLoader(
         val_dataset,
-        batch_size=config.batch_size, drop_last=False, shuffle=False,
+        batch_size=config.batch_size,
+        drop_last=False,
+        shuffle=False,
         collate_fn=collate_fn,
-        num_workers=10, pin_memory=True)
+        num_workers=10,
+        pin_memory=True,
+    )
 
     return train_loader, val_loader
 
 
 def get_optimizer(config: OptimizerConfig, parameters):
-    optimizers = dict(
-        radam=RAdam
-    )
+    optimizers = dict(radam=RAdam)
     if config.name in optimizers:
         return optimizers[config.name](parameters, **config.config)
     else:
@@ -108,10 +129,7 @@ def get_optimizer(config: OptimizerConfig, parameters):
 
 
 def get_scheduler(config: SchedulerConfig, optimizer):
-    schedulers = dict(
-        cosine=CosineAnnealingLR,
-        step=MultiStepLR
-    )
+    schedulers = dict(cosine=CosineAnnealingLR, step=MultiStepLR)
     if config.name in schedulers:
         return schedulers[config.name](optimizer, **config.config)
     else:
@@ -150,12 +168,17 @@ def train(config: TrainConfig):
     else:
         checkpoint_path = Path(config.checkpoint_dir) / f"weights-{config.trial_id}.pth"
         saver = BestModelSaver(
-            model, metric_name="mAP", num_checkpoints=1,
+            model,
+            metric_name="mAP",
+            num_checkpoints=1,
             checkpoint_path=str(checkpoint_path),
-            mode="max", ema=True, alpha=0.2, verbose=True)
+            mode="max",
+            ema=True,
+            alpha=0.2,
+            verbose=True,
+        )
 
-    writer = SummaryWriter(
-        log_dir=str(Path(config.log_dir) / config.trial_id))
+    writer = SummaryWriter(log_dir=str(Path(config.log_dir) / config.trial_id))
 
     def log_scalar(key, value, step):
         writer.add_scalar(key, value, step)
@@ -176,7 +199,13 @@ def train(config: TrainConfig):
 
         if (epoch == (config.num_epochs - 1)) or ((epoch + 1) % config.valid.step == 0):
             with torch.no_grad():
-                metrics = validate_epoch(dp_model, val_loader, device, criterions, config.valid.score_threshold)
+                metrics = validate_epoch(
+                    dp_model,
+                    val_loader,
+                    device,
+                    criterions,
+                    config.valid.score_threshold,
+                )
             for k, v in metrics.items():
                 log_scalar("val_" + k, v, epoch)
                 meters[k].update(v)
@@ -254,11 +283,19 @@ def validate_epoch(model, data_loader, device, criterions, score_threshold):
             sum_loss += loss * loss_weight
         meters["loss"].update(sum_loss.cpu().item())
 
-        for i, (image_id, bboxes_true) in enumerate(zip(sample["image_id"], sample["bboxes"])):
+        for i, (image_id, bboxes_true) in enumerate(
+            zip(sample["image_id"], sample["bboxes"])
+        ):
             bboxes_pred, confidences = get_bboxes(
-                pred["hm"][i], pred["size"][i], pred["off"][i],
-                score_threshold, limit=100)
-            bboxes_true = coco_to_pascal(bboxes_true.to(bboxes_pred.device).to(bboxes_pred.dtype))
+                pred["hm"][i],
+                pred["size"][i],
+                pred["off"][i],
+                score_threshold,
+                limit=100,
+            )
+            bboxes_true = coco_to_pascal(
+                bboxes_true.to(bboxes_pred.device).to(bboxes_pred.dtype)
+            )
             bboxes_pred = coco_to_pascal(bboxes_pred)
             ap = sweep_average_precision(bboxes_true, bboxes_pred, confidences)
             meters["mAP"].update(ap)
@@ -284,43 +321,40 @@ def main():
     num_epochs = 128
     config = TrainConfig(
         trial_id="",
-        device="cuda:0", seed=0,
+        device="cuda:0",
+        seed=0,
         data=DataConfig(
             train_datasets=[
                 DatasetConfig(
                     "kuzushiji",
                     "data/kuzushiji-recognition/train_images",
-                    "data/kuzushiji-recognition/train.csv")
+                    "data/kuzushiji-recognition/train.csv",
+                )
             ],
             val_datasets=[
                 DatasetConfig(
                     "coco",
                     "data/test/preview",
-                    "data/test/preview/20200611_coco_imglab.json")
+                    "data/test/preview/20200611_coco_imglab.json",
+                )
             ],
             input_size=800,
             hm_alpha=1e-2,
             batch_size=2,
-            seed=0
+            seed=0,
         ),
-        model=ModelConfig(
-            phi=0, pretrained=True,
-            weights=None
-        ),
-        optimizer=OptimizerConfig(
-            name="radam", config=dict(lr=5e-4)),
+        model=ModelConfig(phi=0, pretrained=True, weights=None),
+        optimizer=OptimizerConfig(name="radam", config=dict(lr=5e-4)),
         scheduler=SchedulerConfig(
-            name="cosine", config=dict(T_max=num_epochs - 1, eta_min=lr * 1e-1)),
+            name="cosine", config=dict(T_max=num_epochs - 1, eta_min=lr * 1e-1)
+        ),
         # scheduler=SchedulerConfig(
         #     name="step", config=dict(milestones=[])),
         loss=dict(hm=({}, 1.0), size=({}, 0.1), off=({}, 0.1)),
         num_epochs=num_epochs,
-        valid=ValidConfig(
-            step=1,
-            score_threshold=0.01,
-        ),
+        valid=ValidConfig(step=1, score_threshold=0.01,),
         checkpoint_dir="checkpoint",
-        log_dir="tensorboard"
+        log_dir="tensorboard",
     )
     for phi in range(0, 7):
         config.trial_id = f"phi{phi}-{dt.now():%Y%m%d%H%M%S}"

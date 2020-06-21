@@ -10,8 +10,8 @@ class MobileV3(nn.Module):
         in_channels: int,
         out_channels: int,
         mid_channels: int,
-        kernel: t.Literal[3, 5] = 3,
-        stride: t.Literal[1, 2] = 1,
+        kernel: int = 3,
+        stride: int = 1,
     ):
         super().__init__()
         padding = (kernel - 1) // 2
@@ -57,7 +57,7 @@ class SENextBottleneck2d(nn.Module):
         stride: int = 1,
         reduction: int = 8,
         groups: int = 16,
-        pool: t.Literal["max", "avg"] = "max",
+        pool: str = "max",
     ) -> None:
         super().__init__()
         mid_channels = groups * (out_channels // 2 // groups)

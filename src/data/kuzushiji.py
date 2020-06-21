@@ -13,15 +13,17 @@ from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
 
 
 class KuzushijiDataset(Dataset):
-
-    def __init__(self, image_dir: str, annot_file: str, transforms = None):
+    def __init__(self, image_dir: str, annot_file: str, transforms=None):
         self.image_dataset = ImageFileDataset(image_dir, ".jpg")
         self.annot_file = annot_file
-        self.preprocess = albm.Compose([
-            RandomDilateErode(ks_limit=(1, 5)),
-            RandomLayout(800, 800, size_limit=(0.5, 1.0)),
-            RandomRuledLines()
-        ], bbox_params={"format": "coco", "label_fields": ["labels"]})
+        self.preprocess = albm.Compose(
+            [
+                RandomDilateErode(ks_limit=(1, 5)),
+                RandomLayout(800, 800, size_limit=(0.5, 1.0)),
+                RandomRuledLines(),
+            ],
+            bbox_params={"format": "coco", "label_fields": ["labels"]},
+        )
         self.transforms = transforms
         titles = [
             Path(_).stem.replace("_", "-").split("-")[0]
@@ -53,10 +55,10 @@ class KuzushijiDataset(Dataset):
         tokens = bboxes_str.split(" ")
         bboxes = []
         for idx in range(0, len(tokens), 5):
-            bbox = [int(_) for _ in tokens[idx + 1:idx + 5]]
+            bbox = [int(_) for _ in tokens[idx + 1 : idx + 5]]
             bboxes.append(bbox)
         return np.array(bboxes)
-    
+
     @staticmethod
     def filter_bboxes(bboxes: np.ndarray, image_size, min_area=100) -> np.ndarray:
         eps = 1e-6

@@ -18,7 +18,14 @@ import albumentations as albm
 import albumentations.pytorch as albm_torch
 from tqdm import tqdm
 from .losses.focal_loss import FocalLossWithLogits
-from .config import TrainConfig, ModelConfig, DataConfig, OptimizerConfig, SchedulerConfig, ValidConfig
+from .config import (
+    TrainConfig,
+    ModelConfig,
+    DataConfig,
+    OptimizerConfig,
+    SchedulerConfig,
+    ValidConfig,
+)
 from .models import get_model
 from .models.ctdet import get_bboxes
 from .model_saver import NullSaver, BestModelSaver
@@ -31,35 +38,43 @@ from .evaluation import coco_to_pascal, sweep_average_precision
 
 def get_loader(config: DataConfig):
 
-    transforms = albm.Compose([
-        albm.LongestMaxSize(config.input_size),
-        albm.PadIfNeeded(
-            config.input_size, config.input_size,
-            border_mode=cv2.BORDER_CONSTANT, value=0),
-        MakeMap(config.hm_alpha),
-        albm.Normalize(**NORMALIZE_PARAMS),
-        albm_torch.ToTensorV2()
-    ], bbox_params={"format": "coco", "label_fields": ["labels"]})
+    transforms = albm.Compose(
+        [
+            albm.LongestMaxSize(config.input_size),
+            albm.PadIfNeeded(
+                config.input_size,
+                config.input_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=0,
+            ),
+            MakeMap(config.hm_alpha),
+            albm.Normalize(**NORMALIZE_PARAMS),
+            albm_torch.ToTensorV2(),
+        ],
+        bbox_params={"format": "coco", "label_fields": ["labels"]},
+    )
 
     dataset = CocoDataset(
         config.image_dir,
         config.annot_file,
-        transforms=Lambda(lambda _: val_transforms(**_))
+        transforms=Lambda(lambda _: val_transforms(**_)),
     )
 
     val_loader = DataLoader(
         val_dataset,
-        batch_size=config.batch_size, drop_last=False, shuffle=False,
+        batch_size=config.batch_size,
+        drop_last=False,
+        shuffle=False,
         collate_fn=collate_fn,
-        num_workers=10, pin_memory=True)
+        num_workers=10,
+        pin_memory=True,
+    )
 
     return val_loader
 
 
 def get_optimizer(config: OptimizerConfig, parameters):
-    optimizers = dict(
-        radam=RAdam
-    )
+    optimizers = dict(radam=RAdam)
     if config.name in optimizers:
         return optimizers[config.name](parameters, **config.config)
     else:
@@ -67,10 +82,7 @@ def get_optimizer(config: OptimizerConfig, parameters):
 
 
 def get_scheduler(config: SchedulerConfig, optimizer):
-    schedulers = dict(
-        cosine=CosineAnnealingLR,
-        step=MultiStepLR
-    )
+    schedulers = dict(cosine=CosineAnnealingLR, step=MultiStepLR)
     if config.name in schedulers:
         return schedulers[config.name](optimizer, **config.config)
     else:
@@ -109,12 +121,17 @@ def train(config: TrainConfig):
     else:
         checkpoint_path = Path(config.checkpoint_dir) / f"weights-{config.trial_id}.pth"
         saver = BestModelSaver(
-            model, metric_name="mAP", num_checkpoints=1,
+            model,
+            metric_name="mAP",
+            num_checkpoints=1,
             checkpoint_path=str(checkpoint_path),
-            mode="max", ema=True, alpha=0.2, verbose=True)
+            mode="max",
+            ema=True,
+            alpha=0.2,
+            verbose=True,
+        )
 
-    writer = SummaryWriter(
-        log_dir=str(Path(config.log_dir) / config.trial_id))
+    writer = SummaryWriter(log_dir=str(Path(config.log_dir) / config.trial_id))
 
     def log_scalar(key, value, step):
         writer.add_scalar(key, value, step)
@@ -135,7 +152,13 @@ def train(config: TrainConfig):
 
         if (epoch == (config.num_epochs - 1)) or ((epoch + 1) % config.valid.step == 0):
             with torch.no_grad():
-                metrics = validate(dp_model, val_loader, device, criterions, config.valid.score_threshold)
+                metrics = validate(
+                    dp_model,
+                    val_loader,
+                    device,
+                    criterions,
+                    config.valid.score_threshold,
+                )
             for k, v in metrics.items():
                 log_scalar("val_" + k, v, epoch)
                 meters[k].update(v)
@@ -213,11 +236,19 @@ def validate(model, data_loader, device, criterions, score_threshold):
             sum_loss += loss * loss_weight
         meters["loss"].update(sum_loss.cpu().item())
 
-        for i, (image_id, bboxes_true) in enumerate(zip(sample["image_id"], sample["bboxes"])):
+        for i, (image_id, bboxes_true) in enumerate(
+            zip(sample["image_id"], sample["bboxes"])
+        ):
             bboxes_pred, confidences = get_bboxes(
-                pred["hm"][i], pred["size"][i], pred["off"][i],
-                score_threshold, limit=100)
-            bboxes_true = coco_to_pascal(bboxes_true.to(bboxes_pred.device).to(bboxes_pred.dtype))
+                pred["hm"][i],
+                pred["size"][i],
+                pred["off"][i],
+                score_threshold,
+                limit=100,
+            )
+            bboxes_true = coco_to_pascal(
+                bboxes_true.to(bboxes_pred.device).to(bboxes_pred.dtype)
+            )
             bboxes_pred = coco_to_pascal(bboxes_pred)
             ap = sweep_average_precision(bboxes_true, bboxes_pred, confidences)
             meters["mAP"].update(ap)
@@ -243,33 +274,29 @@ def main():
     num_epochs = 256
     config = TrainConfig(
         trial_id="",
-        device="cuda:0", seed=0,
+        device="cuda:0",
+        seed=0,
         data=DataConfig(
             image_dir="data/kuzushiji-recognition/train_images",
             annot_file="data/kuzushiji-recognition/train.csv",
-            cv_splits=5, cv_split_seed=0, cv_fold=0,
+            cv_splits=5,
+            cv_split_seed=0,
+            cv_fold=0,
             input_size=800,
             hm_alpha=1e-2,
             batch_size=6,
-            seed=0
+            seed=0,
         ),
-        model=ModelConfig(
-            phi=0, pretrained=True, weights=None
-        ),
-        optimizer=OptimizerConfig(
-            name="radam", config=dict(lr=5e-4)),
+        model=ModelConfig(phi=0, pretrained=True, weights=None),
+        optimizer=OptimizerConfig(name="radam", config=dict(lr=5e-4)),
         # scheduler=SchedulerConfig(
         #     name="cosine", config=dict(T_max=num_epochs - 1, eta_min=lr * 1e-1)),
-        scheduler=SchedulerConfig(
-            name="step", config=dict(milestones=[])),
+        scheduler=SchedulerConfig(name="step", config=dict(milestones=[])),
         loss=dict(hm=({}, 1.0), size=({}, 0.1), off=({}, 0.1)),
         num_epochs=num_epochs,
-        valid=ValidConfig(
-            step=8,
-            score_threshold=0.01,
-        ),
+        valid=ValidConfig(step=8, score_threshold=0.01,),
         checkpoint_dir="checkpoint",
-        log_dir="tensorboard"
+        log_dir="tensorboard",
     )
     for cv_fold in range(5):
         config.trial_id = f"fold{cv_fold}-{dt.now():%Y%m%d%H%M%S}"

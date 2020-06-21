@@ -16,7 +16,6 @@ SIDEOUT = {  # phi: (stages, channels)
 
 
 class EfficientNetBackbone(nn.Module):
-
     def __init__(self, phi: int, pretrained: bool = False):
         super().__init__()
         model_name = f"efficientnet-b{phi}"
