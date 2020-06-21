@@ -56,3 +56,15 @@ def yolo_to_coco(yolo: YoloBoxes, size: Size) -> CoCoBoxes:
     x0, y0, x1, y1 = yolo_to_pascal(yolo, size).unbind(-1)
     b = torch.stack([x0, y0, x1 - x0, y1 - y0], dim=-1).long()
     return CoCoBoxes(b)
+
+
+def pascal_to_yolo(pascal: PascalBoxes, size: Size) -> YoloBoxes:
+    x0, y0, x1, y1 = pascal.unbind(-1)
+    size_w, size_h = size
+    b = [
+        (x0 + x1) / 2 / size_w,
+        (y0 + y1) / 2 / size_h,
+        (x1 - x0) / size_w,
+        (y1 - y0) / size_h,
+    ]
+    return YoloBoxes(torch.stack(b, dim=-1))

@@ -26,7 +26,7 @@ class Trainer:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.lr)
         self.train_loader = train_loader
         self.criterion = Criterion()
-        self.preprocess = PreProcess()
+        self.preprocess = PreProcess(self.device)
 
     def train(self, num_epochs: int) -> None:
         for epoch in range(num_epochs):
@@ -38,11 +38,10 @@ class Trainer:
         count = 0
         loader = self.train_loader
         for samples, targets, ids in loader:
-            print(samples, targets, ids)
-            #  count += 1
-            #  samples, cri_targets = self.preprocess((samples, targets))
-            #  outputs = self.model(samples)
-            #  loss = self.criterion(outputs, cri_targets)
-            #  self.optimizer.zero_grad()
-            #  loss.backward()
-            #  self.optimizer.step()
+            count += 1
+            samples, cri_targets = self.preprocess((samples, targets))
+            outputs = self.model(samples)
+            loss = self.criterion(outputs, cri_targets)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()

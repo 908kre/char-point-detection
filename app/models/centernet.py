@@ -169,9 +169,9 @@ class SoftHeatMap:
         )
         self.mount = self.mount / self.mount.max()
 
-    def __call__(self, boxes: YoloBoxes, ref_image: Image) -> NetOutput:
-        device = ref_image.device
-        _, h, w = ref_image.shape
+    def __call__(self, boxes: YoloBoxes, size: t.Tuple[int, int]) -> NetOutput:
+        device = boxes.device
+        w, h = size
         heatmap = torch.zeros((1, 1, h, w), dtype=torch.float32).to(device)
         sizemap = torch.zeros((1, 2, h, w), dtype=torch.float32).to(device)
         box_count, _ = boxes.shape
@@ -199,18 +199,21 @@ class SoftHeatMap:
 
 
 class PreProcess:
-    def __init__(self,) -> None:
+    def __init__(self, device: t.Any) -> None:
         super().__init__()
         self.heatmap = SoftHeatMap()
+        self.device = device
 
     def __call__(
         self, batch: t.Tuple[ImageBatch, t.List[YoloBoxes]]
     ) -> t.Tuple[ImageBatch, NetOutput]:
         image_batch, boxes_batch = batch
+        image_batch = ImageBatch(image_batch.to(self.device))
         hms: t.List[t.Any] = []
         sms: t.List[t.Any] = []
+        _, _, h, w = image_batch.shape
         for img, boxes in zip(image_batch.unbind(0), boxes_batch):
-            hm, sm = self.heatmap(boxes, ref_image=Image(img))
+            hm, sm = self.heatmap(YoloBoxes(boxes.to(self.device)), (w // 2, h // 2))
             hms.append(hm)
             sms.append(sm)
 

@@ -72,8 +72,8 @@ class CocoDataset(Dataset):
         boxes = coco_to_yolo(boxes, (w, h))
         return (
             ImageId(image_name),
-            Image(image),
-            YoloBoxes(boxes),
+            Image(image.float()),
+            YoloBoxes(boxes.float()),
         )
 
     def __len__(self) -> int:

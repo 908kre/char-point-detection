@@ -19,7 +19,7 @@ def test_softheatmap() -> None:
     in_image = Image(torch.zeros(1, 100, 100))
     to_boxes = ToBoxes(thresold=0.1)
     to_heatmap = SoftHeatMap()
-    hm, sm = to_heatmap(in_boxes, in_image)
+    hm, sm = to_heatmap(in_boxes, (100, 100))
     assert (hm.eq(1).nonzero()[0, 2:] - torch.tensor([[40, 20]])).sum() == 0  # type: ignore
     assert (sm.nonzero()[0, 2:] - torch.tensor([[40, 20]])).sum() == 0  # type: ignore
     assert hm.shape == (1, 1, 100, 100)

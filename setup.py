@@ -23,7 +23,7 @@ setup(
         "albumentations",
         "pycocotools",
         "efficientnet_pytorch",
-        "random-char-image @ git+https://github.com/h4nyu/random-char-image",
+        "random_char_image @ git+https://github.com/h4nyu/random-char-image",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},
     entry_points={"console_scripts": ["app=app.cmd:main"],},
