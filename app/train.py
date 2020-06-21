@@ -8,16 +8,21 @@ from app.models.centernet import (
     PreProcess,
 )
 from app import config
+from app.utils import ModelLoader
 from torch import nn
 from torch.utils.data import DataLoader
 
 
 class Trainer:
     def __init__(
-        self, train_loader: DataLoader, test_loader: DataLoader, model: nn.Module,
+        self,
+        train_loader: DataLoader,
+        test_loader: DataLoader,
+        model_loader: ModelLoader,
     ) -> None:
         self.device = torch.device(config.device)
-        self.model = model.to(self.device)
+        self.model_loader = model_loader
+        self.model = model_loader.model.to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.lr)
         self.train_loader = train_loader
         self.criterion = Criterion()
@@ -33,10 +38,11 @@ class Trainer:
         count = 0
         loader = self.train_loader
         for samples, targets, ids in loader:
-            count += 1
-            samples, cri_targets = self.preprocess((samples, targets))
-            outputs = self.model(samples)
-            loss = self.criterion(outputs, cri_targets)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+            print(samples, targets, ids)
+            #  count += 1
+            #  samples, cri_targets = self.preprocess((samples, targets))
+            #  outputs = self.model(samples)
+            #  loss = self.criterion(outputs, cri_targets)
+            #  self.optimizer.zero_grad()
+            #  loss.backward()
+            #  self.optimizer.step()

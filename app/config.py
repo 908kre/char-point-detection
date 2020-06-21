@@ -6,7 +6,7 @@ plot_dir = "/store/plot"
 image_dir = "/store/images"
 lr = 1e-4
 
-n_splits = 5
+n_splits = 4
 seed = 777
 device = "cuda"
 

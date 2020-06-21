@@ -2,7 +2,9 @@ import torch
 import typing as t
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from torch import nn
 from pathlib import Path
+import json
 import random
 import numpy as np
 from torch import Tensor
@@ -80,3 +82,24 @@ class DetectionPlot:
                 linewidth=1,
             )
             self.ax.add_patch(rect)
+
+
+class ModelLoader:
+    def __init__(self, out_dir: str, model: nn.Module,) -> None:
+        self.out_dir = Path(out_dir)
+        self.checkpoint_file = self.out_dir / "checkpoint.json"
+        self.model = model
+
+        self.out_dir.mkdir(exist_ok=True)
+        if self.checkpoint_file.exists():
+            self.load()
+
+    def load(self) -> None:
+        with open(self.checkpoint_file, "r") as f:
+            data = json.load(f)
+        self.model.load_state_dict(
+            torch.load(output_dir.joinpath(f"model.pth"))  # type: ignore
+        )
+
+    def save(self) -> None:
+        torch.save(self.model.state_dict(), self.out_dir / f"model.pth")  # type: ignore
