@@ -1,4 +1,5 @@
-from torch import nn
+import typing as t
+from torch import nn, Tensor
 import torch.nn.functional as F
 
 
@@ -36,7 +37,7 @@ class CSE2d(nn.Module):
             nn.Conv2d(in_channels, in_channels // reduction, 1),
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels // reduction, in_channels, 1),
-            nn.Sigmoid(),
+            Hsigmoid(inplace=True),
         )
 
     def forward(self, x):  # type: ignore
@@ -55,6 +56,7 @@ class ConvBR2d(nn.Module):
         dilation: int = 1,
         groups: int = 1,
         bias: bool = False,
+        activation: t.Optional[nn.Module] = Hswish(inplace=True),
     ):
         super().__init__()
         self.conv = nn.Conv2d(
@@ -68,8 +70,11 @@ class ConvBR2d(nn.Module):
             bias=bias,
         )
         self.norm = nn.BatchNorm2d(out_channels)
+        self.activation = activation
 
-    def forward(self, x):  # type:ignore
+    def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
         x = self.norm(x)
+        if self.activation is not None:
+            x = self.activation(x)
         return x

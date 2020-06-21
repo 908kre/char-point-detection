@@ -22,6 +22,7 @@ setup(
         "torchsummary",
         "albumentations",
         "pycocotools",
+        "efficientnet_pytorch",
         "random-char-image @ git+https://github.com/h4nyu/random-char-image",
     ],
     extras_require={"dev": ["mypy", "pytest", "black",]},

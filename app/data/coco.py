@@ -9,7 +9,6 @@ from .common import imread, Sample
 from app.entities import CoCoBoxes
 
 
-
 class CocoDataset(Dataset):
     def __init__(
         self, image_dir: str, annot_file: str, transforms: t.Callable = None
@@ -32,7 +31,9 @@ class CocoDataset(Dataset):
         image_name = self.coco.imgs[image_id]["file_name"]
         image = imread(str(self.image_dir / image_name))
         dummy_labels = np.zeros(len(bboxes), dtype=np.int64)
-        return Sample(id=image_name, image=image, boxes=CoCoBoxes(bboxes), labels=dummy_labels,)
+        return Sample(
+            id=image_name, image=image, boxes=CoCoBoxes(bboxes), labels=dummy_labels,
+        )
 
     def __len__(self) -> int:
         return len(self.image_ids)
