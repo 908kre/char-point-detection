@@ -13,5 +13,5 @@ services:
       - ./store:/store
     runtime: nvidia
     environment:
-      - KAGGLE_USERNAME
-      - KAGGLE_KEY
+      - kaggle_username
+      - kaggle_key

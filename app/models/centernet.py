@@ -79,3 +79,27 @@ class FocalLoss(nn.Module):
         loss = (pos_loss + neg_loss).sum()
         num_pos = pos_mask.sum().float()
         return loss / num_pos
+
+class Criterion:
+    def __init__(
+        self,
+    ) -> None:
+        super().__init__()
+        self.focal_loss = FocalLoss()
+        self.reg_loss = RegLoss()
+
+    def __call__(self, src: NetOutput, tgt: NetOutput) -> Tensor:
+        s_hm, s_sm = src
+        t_hm, t_sm = tgt
+        hm_loss = self.focal_loss(s_hm, t_hm)
+        size_loss = self.reg_loss(s_sm, t_sm) * 10
+        return hm_loss + size_loss
+
+class RegLoss:
+    def __call__(self, output: Sizemap, target: Sizemap,) -> Tensor:
+        mask = (target > 0).view(target.shape)
+        num = mask.sum()
+        regr_loss = F.l1_loss(output, target, reduction="none") * mask
+        regr_loss = regr_loss.sum() / (num + 1e-4)
+        return regr_loss
+

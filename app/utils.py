@@ -3,9 +3,17 @@ import typing as t
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pathlib import Path
-
+import random
+import numpy as np
 from torch import Tensor
 from app.entities import CoCoBoxes
+
+
+def init_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)  # type: ignore
+    torch.cuda.manual_seed(seed)  # type: ignore
 
 
 class DetectionPlot:
