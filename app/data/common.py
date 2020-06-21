@@ -7,6 +7,19 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 
+class Sample:
+    id: str
+    image: Tensor
+    boxes: Tensor
+    labels: Tensor
+
+    def __init__(self, id: str, image: Tensor, boxes: Tensor, labels: Tensor) -> None:
+        self.id = id
+        self.image = image
+        self.boxes = boxes
+        self.labels = labels
+
+
 T = t.TypeVar("T")
 
 
