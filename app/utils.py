@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 import numpy as np
 from torch import Tensor
-from app.entities import CoCoBoxes
+from app.entities.box import CoCoBoxes, YoloBoxes, yolo_to_coco
 
 
 def init_seed(seed: int) -> None:
@@ -40,7 +40,21 @@ class DetectionPlot:
             shape = image.shape
             raise ValueError(f"invald shape={shape}")
 
-    def with_boxes(
+    def with_yolo_boxes(
+        self,
+        boxes: YoloBoxes,
+        probs: t.Optional[Tensor] = None,
+        color: str = "black",
+        fontsize: int = 7,
+    ) -> None:
+        self.with_coco_boxes(
+            boxes=yolo_to_coco(boxes, size=(self.w, self.h)),
+            probs=probs,
+            color=color,
+            fontsize=fontsize,
+        )
+
+    def with_coco_boxes(
         self,
         boxes: CoCoBoxes,
         probs: t.Optional[Tensor] = None,

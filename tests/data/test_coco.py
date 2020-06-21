@@ -14,5 +14,5 @@ def test_CocoDataset() -> None:
     boxes = sample.boxes
     plot = DetectionPlot(figsize=(10, 10))
     plot.with_image(image)
-    plot.with_boxes(boxes)
+    plot.with_coco_boxes(boxes)
     plot.save("/store/tests/plot-coco.png")

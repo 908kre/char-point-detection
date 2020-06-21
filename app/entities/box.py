@@ -1,24 +1,50 @@
+import torch
 import typing as t
 from torch import Tensor
 
-CoCoBoxes = t.NewType("CoCoBoxes", Tensor)
+CoCoBoxes = t.NewType(
+    "CoCoBoxes", Tensor
+)  # [B, Pos] Pos:[x0, y0, width, height] original
+YoloBoxes = t.NewType(
+    "YoloBoxes", Tensor
+)  # [B, Pos] Pos:[cx, cy, width, height] normalized
+PascalBoxes = t.NewType("PascalBoxes", Tensor)  # [B, Pos] Pos:[x0, y0, x1, y1] original
+
 Labels = t.NewType("Labels", Tensor)
 Confidences = t.NewType("Confidences", Tensor)
 
-
-class PredBoxes:
-    boxes: CoCoBoxes
-    confidences: Confidences
-
-    def __init__(self, boxes: CoCoBoxes, confidences: Confidences) -> None:
-        self.boxes = boxes
-        self.confidences = confidences
+PredBoxes = t.Tuple[CoCoBoxes, Confidences]
+LabelBoxes = t.Tuple[CoCoBoxes, Labels]
+Size = t.Tuple[int, int]
 
 
-class LabelBoxes:
-    boxes: CoCoBoxes
-    labels: Labels
+def yoyo_to_pascal(x: CoCoBoxes, size: t.Tuple[int, int]) -> YoloBoxes:
+    ...
 
-    def __init__(self, boxes: CoCoBoxes, labels: Labels) -> None:
-        self.boxes = boxes
-        self.labels = labels
+
+def coco_to_yolo(x: CoCoBoxes, size: t.Tuple[int, int]) -> YoloBoxes:
+    ...
+
+
+def coco_to_pascal(coco: CoCoBoxes) -> PascalBoxes:
+    x0, y0, w, h = coco.unbind(-1)
+    b = [x0, y0, x0 + w, y0 + h]
+    return PascalBoxes(torch.stack(b, dim=-1))
+
+
+def yolo_to_pascal(yolo: YoloBoxes, size: Size) -> PascalBoxes:
+    cx, cy, w, h = yolo.unbind(-1)
+    size_w, size_h = size
+    b = [
+        (cx - 0.5 * w) * size_w,
+        (cy - 0.5 * h) * size_h,
+        (cx + 0.5 * w) * size_w,
+        (cy + 0.5 * h) * size_h,
+    ]
+    return PascalBoxes(torch.stack(b, dim=-1))
+
+
+def yolo_to_coco(yolo: YoloBoxes, size: Size) -> CoCoBoxes:
+    x0, y0, x1, y1 = yolo_to_pascal(yolo, size).unbind(-1)
+    b = torch.stack([x0, y0, x1 - x0, y1 - y0], dim=-1).long()
+    return CoCoBoxes(b)

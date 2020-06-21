@@ -6,11 +6,12 @@ import torch.nn.functional as F
 from app import config
 from torch import nn, Tensor
 from logging import getLogger
+from app.entities import YoloBoxes, Confidences
 from .modules import ConvBR2d
 from .bottlenecks import SENextBottleneck2d
 from .bifpn import BiFPN, FP
 from .backbones import EfficientNetBackbone, ResNetBackbone
-from app.entities import ImageBatch
+from app.entities import ImageBatch, PredBoxes, Image
 from torchvision.ops import nms
 
 from pathlib import Path
@@ -80,10 +81,9 @@ class FocalLoss(nn.Module):
         num_pos = pos_mask.sum().float()
         return loss / num_pos
 
+
 class Criterion:
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self,) -> None:
         super().__init__()
         self.focal_loss = FocalLoss()
         self.reg_loss = RegLoss()
@@ -95,6 +95,7 @@ class Criterion:
         size_loss = self.reg_loss(s_sm, t_sm) * 10
         return hm_loss + size_loss
 
+
 class RegLoss:
     def __call__(self, output: Sizemap, target: Sizemap,) -> Tensor:
         mask = (target > 0).view(target.shape)
@@ -103,3 +104,83 @@ class RegLoss:
         regr_loss = regr_loss.sum() / (num + 1e-4)
         return regr_loss
 
+
+def gaussian_2d(shape: t.Any, sigma: float = 1) -> np.ndarray:
+    m, n = int((shape[0] - 1.0) / 2.0), int((shape[1] - 1.0) / 2.0)
+    y, x = np.ogrid[-m : m + 1, -n : n + 1]
+    h = np.exp(-(x * x + y * y) / (2 * sigma * sigma))
+    h[h < np.finfo(h.dtype).eps * h.max()] = 0
+    return h
+
+
+class ToBoxes:
+    def __init__(self, thresold: float, limit: int = 100) -> None:
+        self.limit = limit
+        self.thresold = thresold
+
+    def __call__(self, inputs: NetOutput) -> t.List[t.Tuple[YoloBoxes, Confidences]]:
+        heatmaps, sizemaps = inputs
+        device = heatmaps.device
+        kp_maps = (F.max_pool2d(heatmaps, 3, stride=1, padding=1) == heatmaps) & (
+            heatmaps > self.thresold
+        )
+        batch_size, _, height, width = heatmaps.shape
+        original_wh = torch.tensor([width, height], dtype=torch.float32).to(device)
+        rows: t.List[t.Tuple[YoloBoxes, Confidences]] = []
+        for hm, kp_map, size_map in zip(
+            heatmaps.squeeze(1), kp_maps.squeeze(1), sizemaps
+        ):
+            pos = kp_map.nonzero()
+            confidences = hm[pos[:, 0], pos[:, 1]]
+            wh = size_map[:, pos[:, 0], pos[:, 1]]
+            cxcy = pos[:, [1, 0]].float() / original_wh
+            boxes = torch.cat([cxcy, wh.permute(1, 0)], dim=1)
+            sort_idx = confidences.argsort(descending=True)[: self.limit]
+            rows.append(
+                (YoloBoxes(boxes[sort_idx]), Confidences(confidences[sort_idx]))
+            )
+        return rows
+
+
+class SoftHeatMap:
+    def __init__(
+        self, mount_size: t.Tuple[int, int] = (5, 5), sigma: float = 1,
+    ) -> None:
+        self.mount_size = mount_size
+        self.mount_pad = (
+            self.mount_size[0] % 2,
+            self.mount_size[1] % 2,
+        )
+        mount = gaussian_2d(self.mount_size, sigma=sigma)
+        self.mount = torch.tensor(mount, dtype=torch.float32).view(
+            1, 1, mount.shape[0], mount.shape[1]
+        )
+        self.mount = self.mount / self.mount.max()
+
+    def __call__(self, boxes: YoloBoxes, ref_image: Image) -> NetOutput:
+        device = ref_image.device
+        _, h, w = ref_image.shape
+        heatmap = torch.zeros((1, 1, h, w), dtype=torch.float32).to(device)
+        sizemap = torch.zeros((1, 2, h, w), dtype=torch.float32).to(device)
+        box_count, _ = boxes.shape
+        if box_count == 0:
+            return Heatmap(heatmap), Sizemap(sizemap)
+        box_cx, box_cy, box_w, box_h = torch.unbind(boxes, dim=1)
+        box_cx = (box_cx * w).long()
+        box_cy = (box_cy * h).long()
+        sizemap[:, :, box_cy, box_cx] = torch.stack([box_w, box_h], dim=0)
+        mount_w, mount_h = self.mount_size
+        pad_w, pad_h = self.mount_pad
+        mount_x0 = box_cx - mount_h // 2
+        mount_x1 = box_cx + mount_h // 2 + pad_h
+        mount_y0 = box_cy - mount_w // 2
+        mount_y1 = box_cy + mount_w // 2 + pad_w
+
+        mount = self.mount.to(device)
+        for x0, x1, y0, y1 in zip(mount_x0, mount_x1, mount_y0, mount_y1):
+            target = heatmap[:, :, y0:y1, x0:x1]  # type: ignore
+            _, _, target_h, target_w = target.shape
+            if (target_h >= mount_h) and (target_w >= mount_w):
+                mount = torch.max(mount, target)
+                heatmap[:, :, y0:y1, x0:x1] = mount  # type: ignore
+        return Heatmap(heatmap), Sizemap(sizemap)
