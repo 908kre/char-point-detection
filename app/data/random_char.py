@@ -9,7 +9,7 @@ from app.entities.box import pascal_to_yolo, PascalBoxes
 from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as albm
 from cytoolz.curried import map, pipe, concat, filter
-from random_char_image import TextRepo, BackgrandRepo, RandomImage
+from random_char_image import TextRepo, RandomImage
 from glob import glob
 
 
@@ -18,14 +18,10 @@ class RandomCharDataset(Dataset):
         self, mode: "str" = "train", max_size: int = 1024, dataset_size: int = 100
     ) -> None:
         self.dataset_size = dataset_size
-        self.br = BackgrandRepo().with_file(
-            "/store/templates/shiyoukyokashinnseisho09.jpg"
-        )
         self.text = TextRepo().with_file("/store/texts/hvt.txt")
         self.ri = (
             RandomImage()
             .with_config(fontsize=28, line_space=30, char_space=20, direction="row")
-            .with_backgrand(self.br.get())
             .with_text(self.text)
         )
         for p in glob("/store/hw_fonts/*.ttf"):

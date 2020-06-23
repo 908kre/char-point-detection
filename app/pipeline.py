@@ -21,9 +21,10 @@ def train(fold_idx: int) -> None:
     )
     rc_dataset = RandomCharDataset(
         max_size=config.max_size,
+        dataset_size=1000,
     )
     dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
-    fold_keys = [len(dataset[i][2]) // 20 for i in range(len(dataset))]
+    fold_keys = [i % 5  for i in range(len(dataset))]
     train_idx, test_idx = list(kfold(n_splits=config.n_splits, keys=fold_keys))[
         fold_idx
     ]
@@ -44,7 +45,7 @@ def train(fold_idx: int) -> None:
     out_dir = f"/kaggle/input/models/{fold_idx}"
     model = CenterNet()
     model_loader = ModelLoader(out_dir=f"/store/{fold_idx}", model=model)
-    visualize = Visualize("./", "centernet", limit=10)
+    visualize = Visualize("./", "centernet", limit=1)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr,)
 
     trainer = Trainer(
