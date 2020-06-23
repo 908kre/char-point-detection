@@ -18,9 +18,9 @@ class CocoDataset(Dataset):
         self,
         image_dir: str,
         annot_file: str,
+        max_size: int,
         transforms: t.Callable = None,
         mode: "str" = "train",
-        length: int = 1024,
     ) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
@@ -30,10 +30,10 @@ class CocoDataset(Dataset):
         bbox_params = {"format": "coco", "label_fields": ["labels"]}
         self.pre_transforms = albm.Compose(
             [
-                albm.LongestMaxSize(max_size=length),
+                albm.LongestMaxSize(max_size=max_size),
                 albm.PadIfNeeded(
-                    min_width=length,
-                    min_height=length,
+                    min_width=max_size,
+                    min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
             ],

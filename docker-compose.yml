@@ -7,11 +7,8 @@ services:
       args:
         - http_proxy
         - https_proxy
-
+    shm_size: '30gb'
     volumes:
       - .:/srv
       - ./store:/store
     runtime: nvidia
-    environment:
-      - kaggle_username
-      - kaggle_key

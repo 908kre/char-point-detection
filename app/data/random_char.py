@@ -14,7 +14,10 @@ from glob import glob
 
 
 class RandomCharDataset(Dataset):
-    def __init__(self, mode: "str" = "train", length: int = 1024,) -> None:
+    def __init__(
+        self, mode: "str" = "train", max_size: int = 1024, dataset_size: int = 100
+    ) -> None:
+        self.dataset_size = dataset_size
         self.br = BackgrandRepo().with_file(
             "/store/templates/shiyoukyokashinnseisho09.jpg"
         )
@@ -32,14 +35,14 @@ class RandomCharDataset(Dataset):
             self.ri.with_label_font(p, label=1, is_random=False)
 
         bbox_params = {"format": "pascal_voc", "label_fields": ["labels"]}
-        self.length = length
+        self.max_size = max_size
         self.post_transforms = albm.Compose([ToTensorV2(),])
         self.pre_transforms = albm.Compose(
             [
-                albm.LongestMaxSize(max_size=length),
+                albm.LongestMaxSize(max_size=max_size),
                 albm.PadIfNeeded(
-                    min_width=length,
-                    min_height=length,
+                    min_width=max_size,
+                    min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
             ],
@@ -47,19 +50,16 @@ class RandomCharDataset(Dataset):
         )
 
     def __len__(self) -> int:
-        return 100
+        return self.dataset_size
 
     def __getitem__(self, idx: int) -> Sample:
         image, _boxes, labels = self.ri.get()
         image = (np.array(image) / 255).astype(np.float32)
-        _boxes = pipe(
-            zip(_boxes, labels), filter(lambda x: x[1] == 0), map(lambda x: x[0]), list
+        boxes = pipe(
+            zip(_boxes, labels), filter(lambda x: x[1] == 0), map(lambda x: x[0]), list,np.array
         )
         labels = np.zeros((len(_boxes),))
-        _boxes = np.array(_boxes).astype(np.int32)
-
-        res = self.pre_transforms(image=image, bboxes=_boxes, labels=labels)
-
+        res = self.pre_transforms(image=image, bboxes=boxes, labels=labels)
         image = res["image"]
         image = self.post_transforms(image=image)["image"]
         _, h, w = image.shape

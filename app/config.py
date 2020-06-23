@@ -10,6 +10,6 @@ n_splits = 4
 seed = 777
 device = "cuda"
 
-input_size = 512
+max_size = 512
 batch_size = 8
 num_workers = 8
