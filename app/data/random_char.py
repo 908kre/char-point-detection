@@ -45,7 +45,10 @@ class RandomCharDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Sample:
         ri = (
-            RandomImage()
+            RandomImage((
+                random.randint(512, 1024),
+                random.randint(512, 1024),
+            ))
             .with_config(
                 fontsize=random.randint(14, 32),
                 line_space=random.randint(14, 32),
@@ -53,7 +56,7 @@ class RandomCharDataset(Dataset):
                 direction=random.choice(["row", "column"]),
             )
             .with_text(self.text)
-            .with_label_font(random.choice(self.hw_fonts), label=0, is_random=False)
+            .with_label_font(random.choice(self.hw_fonts), label=0, is_random=True)
             .with_label_font(random.choice(self.pc_fonts), label=1, is_random=False)
         )
         image, _boxes, labels, chars = ri.get()

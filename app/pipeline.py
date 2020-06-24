@@ -55,7 +55,7 @@ def train(fold_idx: int) -> None:
     trainer = Trainer(
         train_loader, test_loader, model_loader, optimizer, visualize, config.device
     )
-    trainer.train(100)
+    trainer.train(1000)
 
 
 def submit() -> None:

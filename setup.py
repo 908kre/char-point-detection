@@ -23,6 +23,7 @@ setup(
         "albumentations",
         "pycocotools",
         "efficientnet_pytorch",
+        "faker",
         "random_char_image @ git+https://github.com/h4nyu/random-char-image",
         "object_detection @ git+https://github.com/h4nyu/object-detection",
     ],
