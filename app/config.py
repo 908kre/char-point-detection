@@ -9,7 +9,8 @@ lr = 1e-4
 n_splits = 4
 seed = 777
 device = "cuda"
+hidden_channels = 32
 
 max_size = 512
-batch_size = 8
+batch_size = 12
 num_workers = 8

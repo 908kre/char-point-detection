@@ -6,8 +6,15 @@ import cv2
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from .common import imread
-from app.entities import CoCoBoxes, Sample, Image, Labels, YoloBoxes, ImageId
-from app.entities.box import coco_to_yolo
+from object_detection.entities import (
+    CoCoBoxes,
+    Sample,
+    Image,
+    Labels,
+    YoloBoxes,
+    ImageId,
+)
+from object_detection.entities.box import coco_to_yolo
 from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as albm
 from cytoolz.curried import map, pipe, concat

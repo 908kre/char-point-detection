@@ -5,7 +5,7 @@ import cv2
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
-from app.entities import CoCoBoxes, Image, Labels
+from object_detection.entities import CoCoBoxes, Image, Labels
 
 
 class Sample:
