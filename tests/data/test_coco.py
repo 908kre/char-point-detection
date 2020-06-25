@@ -10,8 +10,10 @@ def test_CocoDataset() -> None:
         annot_file="/store/datasets/preview/20200611_coco_imglab.json",
         max_size=512,
     )
-    id, image, boxes = dataset[0]
-    plot = DetectionPlot(figsize=(10, 10))
-    plot.with_image(image)
-    plot.with_yolo_boxes(boxes)
-    plot.save("/store/tests/plot-coco.png")
+    for i in range(10):
+        id, image, boxes = dataset[0]
+        _, h, w= image.shape
+        plot = DetectionPlot(figsize=(10, 10), w=w, h=h)
+        plot.with_image(image)
+        plot.with_yolo_boxes(boxes)
+        plot.save(f"/store/tests/plot-coco-{i}.png")

@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from cytoolz.curried import groupby, valmap, pipe, unique, map, reduce
 from pathlib import Path
 import typing as t
@@ -20,27 +21,26 @@ from app.preprocess import kfold
 
 
 def train(fold_idx: int) -> None:
-    coco_dataset = CocoDataset(
+    dataset = CocoDataset(
         image_dir="/store/datasets/preview",
         annot_file="/store/datasets/preview/20200611_coco_imglab.json",
         max_size=config.max_size,
     )
-    rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=1000,)
-    dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
+    #  rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=1000,)
+    #  dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
     fold_keys = [i % 5 for i in range(len(dataset))]
     train_idx, test_idx = list(kfold(n_splits=config.n_splits, keys=fold_keys))[
         fold_idx
     ]
     train_loader = DataLoader(
-        Subset(dataset, train_idx),
+        Subset(dataset, np.repeat(train_idx, 10)),
         batch_size=config.batch_size,
         drop_last=True,
         collate_fn=collate_fn,
         num_workers=config.num_workers,
     )
     test_loader = DataLoader(
-        #  Subset(dataset, test_idx),
-        coco_dataset,
+        Subset(dataset, test_idx),
         batch_size=config.batch_size,
         drop_last=False,
         collate_fn=collate_fn,

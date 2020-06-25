@@ -4,7 +4,7 @@ import typing as t
 kuzushiji_dir = "/store/train.csv"
 plot_dir = "/store/plot"
 image_dir = "/store/images"
-lr = 1e-4
+lr = 1e-3
 
 n_splits = 4
 seed = 777

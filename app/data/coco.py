@@ -49,7 +49,11 @@ class CocoDataset(Dataset):
         self.post_transforms = albm.Compose([ToTensorV2(),])
 
         self.train_transforms = albm.Compose(
-            [albm.VerticalFlip(),], bbox_params=bbox_params,
+            [
+                albm.VerticalFlip(),
+                albm.RandomRotate90(),
+                albm.RandomSizedBBoxSafeCrop(height=max_size, width=max_size),
+            ], bbox_params=bbox_params,
         )
 
     def __getitem__(self, idx: int) -> Sample:
