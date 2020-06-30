@@ -18,6 +18,15 @@ from object_detection.models.centernet import (
 from object_detection.model_loader import ModelLoader
 from app import config
 from app.preprocess import kfold
+from logging import getLogger, StreamHandler, Formatter, INFO
+
+logger = getLogger()
+logger.setLevel(INFO)
+stream_handler = StreamHandler()
+stream_handler.setLevel(INFO)
+handler_format = Formatter("%(asctime)s|%(name)s|%(message)s")
+stream_handler.setFormatter(handler_format)
+logger.addHandler(stream_handler)
 
 fold_idx = 0
 
@@ -26,7 +35,7 @@ coco_dataset = CocoDataset(
     annot_file="/store/datasets/preview/20200611_coco_imglab.json",
     max_size=config.max_size,
 )
-rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=1000,)
+rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=256,)
 dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
 fold_keys = [i % 5 for i in range(len(dataset))]
 train_idx, test_idx = list(kfold(n_splits=config.n_splits, keys=fold_keys))[fold_idx]
@@ -45,9 +54,9 @@ test_loader = DataLoader(
     num_workers=config.num_workers,
 )
 out_dir = f"/store/ctdr/{fold_idx}"
-model = CenterNet(channels=config.hidden_channels, out_idx=5)
-model_loader = ModelLoader(out_dir=f"/store/{fold_idx}", model=model)
-visualize = Visualize("out_dir", "centernet", limit=2, use_alpha=True)
+model = CenterNet(channels=config.hidden_channels, out_idx=5, depth=1)
+model_loader = ModelLoader(out_dir=out_dir, model=model)
+visualize = Visualize(out_dir, "centernet", limit=2, use_alpha=True)
 optimizer = torch.optim.Adam(model.parameters(), lr=config.lr,)
 
 trainer = Trainer(

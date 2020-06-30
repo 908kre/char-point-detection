@@ -12,6 +12,6 @@ device = "cuda"
 hidden_channels = 32
 out_idx = 5
 
-max_size = 512
-batch_size = 8
+max_size = 1024
+batch_size = 2
 num_workers = 8
