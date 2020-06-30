@@ -21,13 +21,13 @@ from app.preprocess import kfold
 
 
 def train(fold_idx: int) -> None:
-    dataset = CocoDataset(
+    coco_dataset = CocoDataset(
         image_dir="/store/datasets/preview",
         annot_file="/store/datasets/preview/20200611_coco_imglab.json",
         max_size=config.max_size,
     )
-    #  rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=1000,)
-    #  dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
+    rc_dataset = RandomCharDataset(max_size=config.max_size, dataset_size=1000,)
+    dataset: t.Any = ConcatDataset([coco_dataset, rc_dataset])
     fold_keys = [i % 5 for i in range(len(dataset))]
     train_idx, test_idx = list(kfold(n_splits=config.n_splits, keys=fold_keys))[
         fold_idx
