@@ -53,7 +53,8 @@ class CocoDataset(Dataset):
                 albm.VerticalFlip(),
                 albm.RandomRotate90(),
                 albm.RandomSizedBBoxSafeCrop(height=max_size, width=max_size),
-            ], bbox_params=bbox_params,
+            ],
+            bbox_params=bbox_params,
         )
 
     def __getitem__(self, idx: int) -> Sample:
@@ -81,10 +82,12 @@ class CocoDataset(Dataset):
         image = self.post_transforms(image=image)["image"]
         _, h, w = image.shape
         boxes = coco_to_yolo(boxes, (w, h))
+        labels = torch.zeros(boxes.shape[:1])
         return (
             ImageId(image_name),
             Image(image.float()),
             YoloBoxes(boxes.float()),
+            Labels(labels),
         )
 
     def __len__(self) -> int:

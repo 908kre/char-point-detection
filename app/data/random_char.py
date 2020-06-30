@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import cv2
 from torch.utils.data import Dataset
-from object_detection.entities import Sample, Image, Labels, YoloBoxes, ImageId
+from object_detection.entities import Sample, Image, Labels, YoloBoxes, ImageId, Labels
 from object_detection.entities.box import pascal_to_yolo, PascalBoxes
 from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as albm
@@ -45,10 +45,7 @@ class RandomCharDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Sample:
         ri = (
-            RandomImage((
-                random.randint(512, 1024),
-                random.randint(512, 1024),
-            ))
+            RandomImage((random.randint(512, 1024), random.randint(512, 1024),))
             .with_config(
                 fontsize=random.randint(14, 32),
                 line_space=random.randint(14, 32),
@@ -69,8 +66,9 @@ class RandomCharDataset(Dataset):
             list,
             np.array,
         )
-        labels = np.zeros((len(_boxes),))
-        res = self.pre_transforms(image=image, bboxes=boxes, labels=labels)
+        res = self.pre_transforms(
+            image=image, bboxes=boxes, labels=np.zeros((len(_boxes),))
+        )
         image = res["image"]
         image = self.post_transforms(image=image)["image"]
         _, h, w = image.shape
@@ -80,4 +78,5 @@ class RandomCharDataset(Dataset):
             ImageId(""),
             Image(image.float()),
             YoloBoxes(yolo_boxes.float()),
+            Labels(torch.zeros(yolo_boxes.shape[:1])),
         )

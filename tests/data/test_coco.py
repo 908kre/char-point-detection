@@ -11,8 +11,8 @@ def test_CocoDataset() -> None:
         max_size=512,
     )
     for i in range(10):
-        id, image, boxes = dataset[0]
-        _, h, w= image.shape
+        id, image, boxes, _ = dataset[0]
+        _, h, w = image.shape
         plot = DetectionPlot(figsize=(10, 10), w=w, h=h)
         plot.with_image(image)
         plot.with_yolo_boxes(boxes)
