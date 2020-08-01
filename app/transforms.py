@@ -278,14 +278,14 @@ class RandomCrop(albm.BasicTransform):
         ]
         return sample
 
-    def get_origin(self, rows: int, cols: int) -> Tuple[int, int]:
+    def get_origin(self, rows: int, cols: int) -> Tuple[float, float]:
         range_x = sorted([0, cols - self.width])
         range_y = sorted([0, rows - self.height])
         x = random.uniform(*range_x)
         y = random.uniform(*range_y)
-        return int(x), int(y)
+        return x, y
 
-    def apply_to_image(self, image: Any, origin: Tuple[int, int]) -> Any:
+    def apply_to_image(self, image: Any, origin: Tuple[float, float]) -> Any:
         src_x, src_y = origin
         src_w, src_h = self.width, self.height
         dst_x, dst_y, dst_w, dst_h = 0, 0, self.width, self.height
@@ -304,7 +304,7 @@ class RandomCrop(albm.BasicTransform):
             borderValue=0,
         )
 
-    def apply_to_bboxes(self, bboxes: Any, origin: Tuple[int, int]) -> Any:
+    def apply_to_bboxes(self, bboxes: Any, origin: Tuple[float, float]) -> Any:
         origin_x, origin_y = origin
         applied = []
         removed = []

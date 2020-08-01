@@ -1,3 +1,4 @@
+import torch
 from pathlib import Path
 import json
 import numpy as np
@@ -11,7 +12,9 @@ from object_detection.entities import (
     Labels,
     YoloBoxes,
     ImageId,
+    coco_to_yolo,
 )
+from albumentations.pytorch.transforms import ToTensorV2
 from .common import imread
 from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
 
@@ -31,22 +34,30 @@ class CodhKuzushijiDataset(Dataset):
             bbox_params={"format": "coco", "label_fields": ["labels1", "labels2"]},
         )
         self.transforms = transforms
+        self.postprocess = ToTensorV2()
 
     def __getitem__(self, idx:int) -> TrainSample:
         sample = self.annots[idx]
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
-        image = imread(str(image_file))[..., ::-1]
-        sample["image"] = image
-        image_size = tuple(image.shape[:2][::-1])
-        bboxes = self.filter_bboxes(np.array(sample["bboxes"]), image_size)
+        sample["image"] = imread(str(image_file))[..., ::-1]
+        w, h = tuple(sample["image"].shape[:2][::-1])
+        bboxes = self.filter_bboxes(np.array(sample["bboxes"]), (w, h))
         sample["bboxes"] = bboxes
         sample["labels1"] = np.full(len(bboxes), 1, dtype=int)
         sample["labels2"] = np.full(len(bboxes), -1, dtype=int)  # dont care
         sample = self.preprocess(**sample)
         if self.transforms is not None:
             sample = self.transforms(sample)
-        return sample
+        image = self.postprocess(image=sample['image'] / 255)['image']
+        boxes = coco_to_yolo(
+            CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
+        return (
+            ImageId(sample["image_id"]),
+            Image(image),
+            boxes,
+            Labels(sample["labels1"]),
+        )
 
     def __len__(self) -> int:
         return len(self.annots)
