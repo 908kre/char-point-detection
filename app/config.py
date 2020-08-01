@@ -14,7 +14,7 @@ eta_min=1e-6
 effdet_id: Phi = 1
 channels = 128
 pretrained = True
-out_idx: PyramidIdx = 4
+out_idx: PyramidIdx = 3
 fpn_depth = 1
 hm_depth = 1
 box_depth = 1
@@ -34,7 +34,7 @@ hidden_channels = 32
 out_idx = 5
 
 max_size = 1024
-batch_size = 2
+batch_size = 4
 num_workers = 8
 
 out_dir = f"/store/models/ctdtv1-effdet_id-{effdet_id}-fpn_depth-{fpn_depth}-hm_depth-{hm_depth}-box_depth-{box_depth}-channels-{channels}-out_idx-{out_idx}-max_size-{max_size}"
