@@ -23,7 +23,6 @@ setup(
         "albumentations",
         "pycocotools",
         "efficientnet_pytorch",
-        "faker",
         "object_detection @ git+https://github.com/h4nyu/object-detection",
     ],
     extras_require={"dev": ["mypy", "pytest", "black", "typing_extensions"]},
