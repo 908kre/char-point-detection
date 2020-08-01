@@ -5,10 +5,10 @@ from object_detection.entities import PyramidIdx
 from object_detection.models.backbones.effnet import Phi
 
 
-kuzushiji_dir = "/store/train.csv"
-plot_dir = "/store/plot"
-image_dir = "/store/images"
+# train
 lr = 1e-3
+T_max=32
+eta_min=1e-6
 
 # model
 effdet_id: Phi = 1

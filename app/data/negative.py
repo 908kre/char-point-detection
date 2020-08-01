@@ -50,7 +50,7 @@ class NegativeDataset(Dataset):
         boxes = coco_to_yolo(CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
         return (
             ImageId(sample["image_id"]),
-            Image(image),
+            Image(image.float()),
             boxes,
             Labels(sample["labels1"]),
         )
