@@ -1,14 +1,23 @@
 from pathlib import Path
 import json
 import numpy as np
+from typing import List, Any, Optional, Callable, Tuple
 from torch.utils.data import Dataset
 import albumentations as albm
+from object_detection.entities import (
+    CoCoBoxes,
+    TrainSample,
+    Image,
+    Labels,
+    YoloBoxes,
+    ImageId,
+)
 from .common import imread
 from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
 
 
 class CodhKuzushijiDataset(Dataset):
-    def __init__(self, image_dir: str, annot_file: str, transforms=None):
+    def __init__(self, image_dir: str, annot_file: str, transforms:Optional[Callable]=None) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
         with open(annot_file) as fp:
@@ -23,7 +32,7 @@ class CodhKuzushijiDataset(Dataset):
         )
         self.transforms = transforms
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx:int) -> TrainSample:
         sample = self.annots[idx]
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
@@ -39,11 +48,11 @@ class CodhKuzushijiDataset(Dataset):
             sample = self.transforms(sample)
         return sample
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.annots)
 
     @staticmethod
-    def filter_bboxes(bboxes: np.ndarray, image_size, min_area=32) -> np.ndarray:
+    def filter_bboxes(bboxes: np.ndarray, image_size:Any, min_area:int=32) -> np.ndarray:
         eps = 1e-6
         w, h = image_size
         bboxes[:, 2:] += bboxes[:, :2]  # coco to pascal
