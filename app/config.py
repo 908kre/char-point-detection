@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from object_detection.entities import PyramidIdx
 from object_detection.models.backbones.effnet import Phi
 
-
 # train
 lr = 1e-3
 T_max=32
