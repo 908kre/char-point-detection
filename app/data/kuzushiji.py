@@ -20,7 +20,9 @@ from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
 
 
 class CodhKuzushijiDataset(Dataset):
-    def __init__(self, image_dir: str, annot_file: str, transforms:Optional[Callable]=None) -> None:
+    def __init__(
+        self, image_dir: str, annot_file: str, transforms: Optional[Callable] = None
+    ) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
         with open(annot_file) as fp:
@@ -31,12 +33,12 @@ class CodhKuzushijiDataset(Dataset):
                 RandomLayout(1024, 1024, size_limit=(0.9, 1.0)),
                 RandomRuledLines(),
             ],
-            bbox_params={"format": "coco", "label_fields": ["labels1", "labels2"]},
+            bbox_params={"format": "coco", "label_fields": ["labels"]},
         )
         self.transforms = transforms
         self.postprocess = ToTensorV2()
 
-    def __getitem__(self, idx:int) -> TrainSample:
+    def __getitem__(self, idx: int) -> TrainSample:
         sample = self.annots[idx]
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
@@ -44,26 +46,26 @@ class CodhKuzushijiDataset(Dataset):
         w, h = tuple(sample["image"].shape[:2][::-1])
         bboxes = self.filter_bboxes(np.array(sample["bboxes"]), (w, h))
         sample["bboxes"] = bboxes
-        sample["labels1"] = np.full(len(bboxes), 1, dtype=int)
-        sample["labels2"] = np.full(len(bboxes), -1, dtype=int)  # dont care
+        sample["labels"] = np.full(len(bboxes), 1, dtype=int)
         sample = self.preprocess(**sample)
         if self.transforms is not None:
             sample = self.transforms(sample)
-        image = self.postprocess(image=sample['image'] / 255)['image']
-        boxes = coco_to_yolo(
-            CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
+        image = self.postprocess(image=sample["image"] / 255)["image"]
+        boxes = coco_to_yolo(CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
         return (
             ImageId(sample["image_id"]),
             Image(image),
             boxes,
-            Labels(sample["labels1"]),
+            Labels(sample["labels"]),
         )
 
     def __len__(self) -> int:
         return len(self.annots)
 
     @staticmethod
-    def filter_bboxes(bboxes: np.ndarray, image_size:Any, min_area:int=32) -> np.ndarray:
+    def filter_bboxes(
+        bboxes: np.ndarray, image_size: Any, min_area: int = 32
+    ) -> np.ndarray:
         eps = 1e-6
         w, h = image_size
         bboxes[:, 2:] += bboxes[:, :2]  # coco to pascal
