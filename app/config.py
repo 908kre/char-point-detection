@@ -1,10 +1,31 @@
+from typing import Tuple
+from typing_extensions import Literal
 from dataclasses import dataclass
-import typing as t
+from object_detection.entities import PyramidIdx
+from object_detection.models.backbones.effnet import Phi
+
 
 kuzushiji_dir = "/store/train.csv"
 plot_dir = "/store/plot"
 image_dir = "/store/images"
 lr = 1e-3
+
+# model
+effdet_id: Phi = 1
+channels = 128
+pretrained = True
+out_idx: PyramidIdx = 4
+fpn_depth = 1
+hm_depth = 1
+box_depth = 1
+
+# metric
+metric: Tuple[str, Literal["max", "min"]] = ("score", "max")
+iou_thresholds = [0.5]
+
+# to_boxes
+confidence_threshold = 0.1
+use_peak = True
 
 n_splits = 4
 seed = 777
@@ -15,3 +36,5 @@ out_idx = 5
 max_size = 1024
 batch_size = 2
 num_workers = 8
+
+out_dir = f"/store/models/ctdtv1-effdet_id-{effdet_id}-fpn_depth-{fpn_depth}-hm_depth-{hm_depth}-box_depth-{box_depth}-channels-{channels}-out_idx-{out_idx}-max_size-{max_size}"

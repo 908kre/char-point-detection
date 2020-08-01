@@ -11,8 +11,11 @@ def coco_to_pascal(boxes):
 
 
 def sweep_average_precision(
-        true_boxes, pred_boxes, confidences,
-        iou_thresholds=[0.5, 0.55, 0.6, 0.65, 0.7, 0.75]):
+    true_boxes,
+    pred_boxes,
+    confidences,
+    iou_thresholds=[0.5, 0.55, 0.6, 0.65, 0.7, 0.75],
+):
     """
     compute ap, precision @ f1-best, recall @ f1-best.
     boxes are expected to be in pascal voc (x1, y1, x2, y2) format.
@@ -35,10 +38,12 @@ def sweep_average_precision(
             return 0.0, 0.0, 0.0, 0.5
 
     iou_matrix = box_iou(pred_boxes, true_boxes)
-    
+
     ap, precision, recall, threshold = [], [], [], []
     for iou_threshold in iou_thresholds:
-        ap_, precision_, recall_, threshold_ = compute_average_precision(iou_matrix, iou_threshold, confidences)
+        ap_, precision_, recall_, threshold_ = compute_average_precision(
+            iou_matrix, iou_threshold, confidences
+        )
         ap.append(ap_)
         precision.append(precision_)
         recall.append(recall_)
@@ -48,7 +53,8 @@ def sweep_average_precision(
 
 
 def compute_average_precision(
-        iou_matrix: torch.Tensor, iou_threshold: float, confidences: torch.Tensor) -> float:
+    iou_matrix: torch.Tensor, iou_threshold: float, confidences: torch.Tensor
+) -> float:
     iou_matrix = iou_matrix.clone()
     n_pred = iou_matrix.size(0)
     n_true = iou_matrix.size(1)
@@ -65,8 +71,8 @@ def compute_average_precision(
         else:
             gt[pred_idx] = 0
     fn = n_true - match
-    y_true = gt[:n_pred + fn]
-    probas_pred = scores[:n_pred + fn]
+    y_true = gt[: n_pred + fn]
+    probas_pred = scores[: n_pred + fn]
     precision, recall, thresholds = precision_recall_curve(y_true, probas_pred)
     ap = auc(recall, precision)
     f1_score = 2 * precision * recall / (precision + recall + 1e-6)

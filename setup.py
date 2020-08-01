@@ -24,9 +24,8 @@ setup(
         "pycocotools",
         "efficientnet_pytorch",
         "faker",
-        "random_char_image @ git+https://github.com/h4nyu/random-char-image",
         "object_detection @ git+https://github.com/h4nyu/object-detection",
     ],
-    extras_require={"dev": ["mypy", "pytest", "black",]},
+    extras_require={"dev": ["mypy", "pytest", "black", "typing_extensions"]},
     entry_points={"console_scripts": ["app=app.cmd:main"],},
 )

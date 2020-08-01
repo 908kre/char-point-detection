@@ -6,7 +6,6 @@ parser = argparse.ArgumentParser(description="")
 subparsers = parser.add_subparsers()
 
 parser_train = subparsers.add_parser("train")
-parser_train.add_argument("--id", type=int, dest="fold_idx")
 parser_train.set_defaults(handler=train)
 
 parser_submit = subparsers.add_parser("submit")

@@ -8,7 +8,7 @@ from pycocotools.coco import COCO
 from .common import imread
 from object_detection.entities import (
     CoCoBoxes,
-    Sample,
+    TrainSample,
     Image,
     Labels,
     YoloBoxes,
@@ -57,7 +57,7 @@ class CocoDataset(Dataset):
             bbox_params=bbox_params,
         )
 
-    def __getitem__(self, idx: int) -> Sample:
+    def __getitem__(self, idx: int) -> TrainSample:
         image_id = self.image_ids[idx]
         boxes = np.stack(
             [
