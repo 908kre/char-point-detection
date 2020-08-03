@@ -23,8 +23,8 @@ setup(
         "albumentations",
         "pycocotools",
         "efficientnet_pytorch",
-        "object_detection @ git+https://github.com/h4nyu/object-detection",
+        "object_detection @ git+https://github.com/h4nyu/object-detection@remove-group",
     ],
-    extras_require={"dev": ["mypy", "pytest", "black", "typing_extensions"]},
+    extras_require={"dev": ["mypy", "pytest", "black", "typing_extensions", "memory_profiler"]},
     entry_points={"console_scripts": ["app=app.cmd:main"],},
 )

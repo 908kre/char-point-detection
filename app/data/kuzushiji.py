@@ -17,6 +17,7 @@ from object_detection.entities import (
 from albumentations.pytorch.transforms import ToTensorV2
 from .common import imread
 from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
+from memory_profiler import profile
 
 
 class CodhKuzushijiDataset(Dataset):
@@ -36,27 +37,27 @@ class CodhKuzushijiDataset(Dataset):
             bbox_params={"format": "coco", "label_fields": ["labels"]},
         )
         self.transforms = transforms
-        self.postprocess = ToTensorV2()
+        self.postprocess = albm.Compose([ToTensorV2(),])
 
     def __getitem__(self, idx: int) -> TrainSample:
-        sample = self.annots[idx]
+        sample = self.annots[idx].copy()
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
         sample["image"] = imread(str(image_file))[..., ::-1]
         w, h = tuple(sample["image"].shape[:2][::-1])
-        bboxes = self.filter_bboxes(np.array(sample["bboxes"]), (w, h))
+        bboxes = self.filter_bboxes(np.array(sample["bboxes"], dtype=float), (w, h))
         sample["bboxes"] = bboxes
         sample["labels"] = np.full(len(bboxes), 1, dtype=int)
         sample = self.preprocess(**sample)
         if self.transforms is not None:
             sample = self.transforms(sample)
-        image = self.postprocess(image=sample["image"] / 255)["image"].float()
+        image = self.postprocess(image=sample["image"])["image"] / 255.0
         boxes = coco_to_yolo(CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
         return (
             ImageId(sample["image_id"]),
-            Image(image),
+            Image(image.float()),
             boxes,
-            Labels(sample["labels"]),
+            Labels(torch.tensor(sample["labels"])),
         )
 
     def __len__(self) -> int:

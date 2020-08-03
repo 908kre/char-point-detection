@@ -2,19 +2,27 @@ import torch
 import numpy as np
 from cytoolz.curried import groupby, valmap, pipe, unique, map, reduce
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Tuple
 import matplotlib.pyplot as plt
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from sklearn.model_selection import StratifiedKFold
 from object_detection.models.backbones.effnet import EfficientNetBackbone
 from object_detection.metrics.mean_precision import MeanPrecition
 from object_detection.models.centernetv1 import (
-    collate_fn,
     CenterNetV1,
     Trainer as _Trainer,
     Visualize,
     Reg,
     ToBoxes,
+)
+from torch.cuda.amp import GradScaler, autocast
+from tqdm import tqdm
+from object_detection.entities import (
+    TrainSample,
+    ImageBatch,
+    YoloBoxes,
+    ImageId,
+    Labels,
 )
 from object_detection.model_loader import ModelLoader, BestWatcher
 from app import config
@@ -24,15 +32,42 @@ from .data.kuzushiji import CodhKuzushijiDataset
 from .data.negative import NegativeDataset
 
 
+def collate_fn(
+    batch: List[TrainSample],
+) -> Tuple[ImageBatch, List[YoloBoxes], List[Labels], List[ImageId]]:
+    images: List[Any] = []
+    id_batch: List[Any] = []
+    box_batch: List[Any] = []
+    label_batch: List[Any] = []
+
+    for id, img, boxes, labels in batch:
+        images.append(img)
+        box_batch.append(boxes)
+        id_batch.append(id)
+        label_batch.append(labels)
+    return ImageBatch(torch.stack(images)), box_batch, label_batch, id_batch
+
 class Trainer(_Trainer):
     def __init__(self, *args:Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.lr_scheduler = CosineAnnealingLR(
             optimizer=self.optimizer, T_max=config.T_max, eta_min=config.eta_min
         )
+        self.scaler = GradScaler()
 
     def train_one_epoch(self) -> None:
-        super().train_one_epoch()
+        self.model.train()
+        loader = self.train_loader
+        for images, box_batch, ids, _ in tqdm(loader):
+            self.optimizer.zero_grad()
+            images, box_batch = self.preprocess((images, box_batch))
+            outputs = self.model(images)
+            loss, hm_loss, box_loss, gt_hms = self.criterion(images, outputs, box_batch)
+            self.scaler.scale(loss).backward()
+            self.optimizer.step()
+            self.meters["train_loss"].update(loss.item())
+            self.meters["train_box"].update(box_loss.item())
+            self.meters["train_hm"].update(hm_loss.item())
         self.lr_scheduler.step()
 
 
@@ -48,7 +83,7 @@ def train() -> None:
     )
     neg = NegativeDataset(image_dir="/store/negative/images",)
     train_loader = DataLoader(
-        ConcatDataset([codh, neg]), # type: ignore
+        ConcatDataset([codh, neg]),
         batch_size=config.batch_size,
         drop_last=True,
         collate_fn=collate_fn,

@@ -46,13 +46,13 @@ class NegativeDataset(Dataset):
         sample = self.preprocess(**sample)
         if self.transforms is not None:
             sample = self.transforms(sample)
-        image = self.postprocess(image=sample["image"] / 255)["image"]
+        image = self.postprocess(image=sample["image"] / 255.0)["image"]
         boxes = coco_to_yolo(CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
         return (
             ImageId(sample["image_id"]),
             Image(image.float()),
             boxes,
-            Labels(sample["labels1"]),
+            Labels(torch.tensor(sample["labels1"])),
         )
 
     def __len__(self) -> int:
