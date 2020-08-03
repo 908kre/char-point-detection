@@ -30,7 +30,7 @@ seed = 777
 device = "cuda"
 
 max_size = 1024
-batch_size = 4
+batch_size = 3
 num_workers = 8
 
 out_dir = f"/store/models/ctdtv1-effdet_id-{effdet_id}-fpn_depth-{fpn_depth}-hm_depth-{hm_depth}-box_depth-{box_depth}-channels-{channels}-out_idx-{out_idx}-max_size-{max_size}"
