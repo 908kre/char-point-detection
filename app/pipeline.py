@@ -14,6 +14,9 @@ from object_detection.models.centernetv1 import (
     Visualize,
     Reg,
     ToBoxes,
+    Criterion,
+    MkGaussianMaps,
+    MkFillMaps,
 )
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
@@ -53,22 +56,33 @@ class Trainer(_Trainer):
         self.lr_scheduler = CosineAnnealingLR(
             optimizer=self.optimizer, T_max=config.T_max, eta_min=config.eta_min
         )
-        self.scaler = GradScaler()
+
+    def __call__(self, epochs: int) -> None:
+        self.model = self.model_loader.load_if_needed(self.model)
+        for epoch in range(epochs):
+            self.train_one_epoch()
 
     def train_one_epoch(self) -> None:
-        self.model.train()
         loader = self.train_loader
-        for images, box_batch, ids, _ in tqdm(loader):
+        for i, (images, box_batch, ids, _) in enumerate(tqdm(loader)):
+            self.model.train()
             self.optimizer.zero_grad()
             images, box_batch = self.preprocess((images, box_batch))
             outputs = self.model(images)
             loss, hm_loss, box_loss, gt_hms = self.criterion(images, outputs, box_batch)
-            self.scaler.scale(loss).backward()
+            loss.backward()
             self.optimizer.step()
             self.meters["train_loss"].update(loss.item())
             self.meters["train_box"].update(box_loss.item())
             self.meters["train_hm"].update(hm_loss.item())
-        self.lr_scheduler.step()
+            if i % 50 == 0:
+                self.eval_one_epoch()
+                self.lr_scheduler.step()
+                self.model_loader.save_if_needed(
+                    self.model, self.meters[self.model_loader.key].get_value()
+                )
+                self.log()
+                self.reset_meters()
 
 
 def train() -> None:
@@ -80,19 +94,25 @@ def train() -> None:
     codh = CodhKuzushijiDataset(
         image_dir="/store/codh-kuzushiji/resized",
         annot_file="/store/codh-kuzushiji/resized/annot.json",
+        max_size=config.max_size,
     )
-    neg = NegativeDataset(image_dir="/store/negative/images",)
-    train_loader = DataLoader(
-        ConcatDataset([codh, neg]),
+    neg = NegativeDataset(
+        image_dir="/store/negative/images",
+        max_size=config.max_size,
+    )
+    train_loader:Any = DataLoader(
+        ConcatDataset([codh, neg, coco]),
         batch_size=config.batch_size,
         drop_last=True,
+        shuffle=True,
         collate_fn=collate_fn,
         num_workers=config.num_workers,
     )
-    test_loader = DataLoader(
-        coco,
-        batch_size=config.batch_size,
+    test_loader:Any = DataLoader(
+        ConcatDataset([coco, coco]),
+        batch_size=config.batch_size*2,
         drop_last=False,
+        shuffle=False,
         collate_fn=collate_fn,
         num_workers=config.num_workers,
     )
@@ -112,10 +132,18 @@ def train() -> None:
         key=config.metric[0],
         best_watcher=BestWatcher(mode=config.metric[1]),
     )
-    visualize = Visualize(config.out_dir, "centernet", limit=10, use_alpha=True)
+    visualize = Visualize(config.out_dir, "centernet", limit=10, use_alpha=True, figsize=(10, 10))
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr,)
     get_score = MeanPrecition(iou_thresholds=config.iou_thresholds)
     to_boxes = ToBoxes(threshold=config.confidence_threshold, use_peak=config.use_peak,)
+    criterion = Criterion(
+        heatmap_weight=config.heatmap_weight,
+        box_weight=config.box_weight,
+        mkmaps=MkGaussianMaps(
+            sigma=config.sigma,
+            mode=config.mode,
+        ),
+    )
 
     trainer = Trainer(
         model=model,
@@ -126,6 +154,7 @@ def train() -> None:
         visualize=visualize,
         device=config.device,
         get_score=get_score,
+        criterion=criterion,
         to_boxes=to_boxes,
     )
     trainer(1000)

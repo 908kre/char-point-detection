@@ -1,3 +1,4 @@
+import cv2
 import torch
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -19,13 +20,22 @@ from object_detection.entities import (
 
 
 class NegativeDataset(Dataset):
-    def __init__(self, image_dir: str, transforms: Optional[Callable] = None) -> None:
+    def __init__(self, 
+                 image_dir: str, 
+                 max_size:int,
+                 transforms: Optional[Callable] = None) -> None:
         self.image_files = sorted(Path(image_dir).glob("*.jpg"))
         assert len(self.image_files) > 0
         self.preprocess = albm.Compose(
             [
+                albm.ShiftScaleRotate(rotate_limit=10),
+                albm.PadIfNeeded(
+                    min_width=max_size,
+                    min_height=max_size,
+                    border_mode=cv2.BORDER_CONSTANT,
+                ),
+                albm.RandomCrop(max_size, max_size),
                 RandomDilateErode(ks_limit=(1, 3)),
-                RandomLayout(1024, 1024, size_limit=(0.9, 1.0)),
             ],
             bbox_params={"format": "coco", "label_fields": ["labels1", "labels2"]},
         )

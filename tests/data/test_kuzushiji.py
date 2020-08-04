@@ -8,6 +8,7 @@ def test_kuzushiji() -> None:
     dataset = CodhKuzushijiDataset(
         image_dir="/store/codh-kuzushiji/resized",
         annot_file="/store/codh-kuzushiji/resized/annot.json",
+        max_size=512
     )
     for i in range(10):
         id, image, boxes, _ = dataset[0]

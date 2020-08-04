@@ -1,4 +1,5 @@
 import torch
+import cv2
 from pathlib import Path
 import json
 import numpy as np
@@ -22,7 +23,11 @@ from memory_profiler import profile
 
 class CodhKuzushijiDataset(Dataset):
     def __init__(
-        self, image_dir: str, annot_file: str, transforms: Optional[Callable] = None
+        self,
+        image_dir: str,
+        annot_file: str,
+        max_size:int,
+        transforms: Optional[Callable] = None
     ) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
@@ -30,9 +35,24 @@ class CodhKuzushijiDataset(Dataset):
             self.annots = json.load(fp)
         self.preprocess = albm.Compose(
             [
-                RandomDilateErode(ks_limit=(1, 3)),
-                RandomLayout(1024, 1024, size_limit=(0.9, 1.0)),
-                RandomRuledLines(),
+                albm.ShiftScaleRotate(rotate_limit=10),
+                albm.PadIfNeeded(
+                    min_width=max_size,
+                    min_height=max_size,
+                    border_mode=cv2.BORDER_CONSTANT,
+                ),
+                albm.OneOf([
+                    albm.RandomResizedCrop(max_size, max_size),
+                    RandomLayout(max_size, max_size, (0.5, 1.0)),
+                ]),
+                albm.ToGray(p=0.2),
+                albm.RandomBrightnessContrast(
+                    brightness_limit=0.2, contrast_limit=0.2, p=0.9
+                ),
+                #  RandomDilateErode(ks_limit=(0.1, 3)),
+                albm.Cutout(
+                    num_holes=8, max_h_size=max_size//32, max_w_size=max_size//32, fill_value=0, p=0.5
+                ),
             ],
             bbox_params={"format": "coco", "label_fields": ["labels"]},
         )
@@ -44,14 +64,14 @@ class CodhKuzushijiDataset(Dataset):
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
         sample["image"] = imread(str(image_file))[..., ::-1]
-        w, h = tuple(sample["image"].shape[:2][::-1])
-        bboxes = self.filter_bboxes(np.array(sample["bboxes"], dtype=float), (w, h))
+        bboxes = self.filter_bboxes(np.array(sample["bboxes"], dtype=float), sample["image"].shape[:2][::-1])
         sample["bboxes"] = bboxes
         sample["labels"] = np.full(len(bboxes), 1, dtype=int)
         sample = self.preprocess(**sample)
         if self.transforms is not None:
             sample = self.transforms(sample)
         image = self.postprocess(image=sample["image"])["image"] / 255.0
+        _, h, w = image.shape
         boxes = coco_to_yolo(CoCoBoxes(torch.tensor(sample["bboxes"])), (w, h))
         return (
             ImageId(sample["image_id"]),

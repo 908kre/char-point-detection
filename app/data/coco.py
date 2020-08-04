@@ -1,4 +1,5 @@
 import typing as t
+import cv2
 from pathlib import Path
 import torch
 import numpy as np
@@ -37,12 +38,12 @@ class CocoDataset(Dataset):
         bbox_params = {"format": "coco", "label_fields": ["labels"]}
         self.pre_transforms = albm.Compose(
             [
-                albm.LongestMaxSize(max_size=max_size),
                 albm.PadIfNeeded(
                     min_width=max_size,
                     min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
+                albm.RandomCrop(max_size, max_size),
             ],
             bbox_params=bbox_params,
         )
