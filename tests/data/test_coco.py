@@ -5,11 +5,8 @@ from app.data.coco import CocoDataset
 from object_detection.utils import DetectionPlot
 
 
-@pytest.mark.parametrize("max_size,", [
-    512,
-    1024,
-])
-def test_CocoDataset(max_size:int) -> None:
+@pytest.mark.parametrize("max_size,", [512, 1024,])
+def test_CocoDataset(max_size: int) -> None:
     dataset = CocoDataset(
         image_dir="/store/datasets/preview",
         annot_file="/store/datasets/preview/20200611_coco_imglab.json",

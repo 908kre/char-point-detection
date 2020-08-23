@@ -26,8 +26,8 @@ class CodhKuzushijiDataset(Dataset):
         self,
         image_dir: str,
         annot_file: str,
-        max_size:int,
-        transforms: Optional[Callable] = None
+        max_size: int,
+        transforms: Optional[Callable] = None,
     ) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
@@ -35,23 +35,29 @@ class CodhKuzushijiDataset(Dataset):
             self.annots = json.load(fp)
         self.preprocess = albm.Compose(
             [
-                albm.ShiftScaleRotate(rotate_limit=10),
+                albm.OneOf(
+                    [
+                        albm.ShiftScaleRotate(rotate_limit=10),
+                        RandomLayout(max_size, max_size, (0.5, 1.0)),
+                    ]
+                ),
                 albm.PadIfNeeded(
                     min_width=max_size,
                     min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
-                albm.OneOf([
-                    albm.RandomResizedCrop(max_size, max_size),
-                    RandomLayout(max_size, max_size, (0.5, 1.0)),
-                ]),
+                albm.RandomResizedCrop(max_size, max_size),
                 albm.ToGray(p=0.2),
                 albm.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
                 #  RandomDilateErode(ks_limit=(0.1, 3)),
                 albm.Cutout(
-                    num_holes=8, max_h_size=max_size//32, max_w_size=max_size//32, fill_value=0, p=0.5
+                    num_holes=8,
+                    max_h_size=max_size // 32,
+                    max_w_size=max_size // 32,
+                    fill_value=0,
+                    p=0.5,
                 ),
             ],
             bbox_params={"format": "coco", "label_fields": ["labels"]},
@@ -64,7 +70,9 @@ class CodhKuzushijiDataset(Dataset):
         sample["source"] = "codh"
         image_file = self.image_dir / sample["image_id"]
         sample["image"] = imread(str(image_file))[..., ::-1]
-        bboxes = self.filter_bboxes(np.array(sample["bboxes"], dtype=float), sample["image"].shape[:2][::-1])
+        bboxes = self.filter_bboxes(
+            np.array(sample["bboxes"], dtype=float), sample["image"].shape[:2][::-1]
+        )
         sample["bboxes"] = bboxes
         sample["labels"] = np.full(len(bboxes), 1, dtype=int)
         sample = self.preprocess(**sample)

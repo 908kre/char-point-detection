@@ -9,7 +9,6 @@ parser_train = subparsers.add_parser("train")
 parser_train.set_defaults(handler=train)
 
 parser_submit = subparsers.add_parser("submit")
-parser_submit.add_argument("--id", type=int, dest="fold_idx", default=0)
 parser_submit.set_defaults(handler=submit)
 
 

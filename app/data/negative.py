@@ -20,10 +20,9 @@ from object_detection.entities import (
 
 
 class NegativeDataset(Dataset):
-    def __init__(self, 
-                 image_dir: str, 
-                 max_size:int,
-                 transforms: Optional[Callable] = None) -> None:
+    def __init__(
+        self, image_dir: str, max_size: int, transforms: Optional[Callable] = None
+    ) -> None:
         self.image_files = sorted(Path(image_dir).glob("*.jpg"))
         assert len(self.image_files) > 0
         self.preprocess = albm.Compose(

@@ -12,3 +12,11 @@ services:
       - .:/srv
       - ./store:/store
     runtime: nvidia
+
+  web:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./store:/public
+    ports:
+      - "$WEB_PORT:80"
