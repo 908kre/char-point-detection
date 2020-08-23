@@ -106,6 +106,12 @@ def train() -> None:
         annot_file="/store/datasets/preview/20200611_coco_imglab.json",
         max_size=config.max_size,
     )
+
+    hcoco = CocoDataset(
+        image_dir="/store/datasets/hdata",
+        annot_file="/store/datasets/hdata/coco_imglab.json",
+        max_size=config.max_size,
+    )
     codh = CodhKuzushijiDataset(
         image_dir="/store/codh-kuzushiji/resized",
         annot_file="/store/codh-kuzushiji/resized/annot.json",
@@ -113,7 +119,7 @@ def train() -> None:
     )
     neg = NegativeDataset(image_dir="/store/negative/images", max_size=config.max_size,)
     train_loader: Any = DataLoader(
-        ConcatDataset([coco] * 100),  # type: ignore
+        ConcatDataset([coco, hcoco]),  # type: ignore
         batch_size=config.batch_size,
         drop_last=True,
         shuffle=True,
@@ -121,7 +127,7 @@ def train() -> None:
         num_workers=config.num_workers,
     )
     test_loader: Any = DataLoader(
-        ConcatDataset([coco, coco]),
+        ConcatDataset([coco]),
         batch_size=config.batch_size * 2,
         drop_last=False,
         shuffle=False,
@@ -280,9 +286,7 @@ def submit() -> None:
     )
     model = cast(CenterNetV1, model_loader.load_if_needed(model)).to(device)
     to_boxes = ToBoxes(threshold=config.confidence_threshold, use_peak=config.use_peak,)
-    # overlap_size = config.max_size // 2
-    # patch_size = config.max_size - overlap_size
-    pil_image = PILImage.open("/store/datasets/preview/RFnSdvHDYb3TkYpJ.jpg")
+    pil_image = PILImage.open("/store/datasets/preview/Dsou13EEC7WTvZoK.jpg")
 
     transform = albm.Compose([
         albm.LongestMaxSize(max_size=config.max_size),

@@ -19,6 +19,7 @@ from object_detection.entities.box import coco_to_yolo
 from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as albm
 from cytoolz.curried import map, pipe, concat
+import json
 
 
 class CocoDataset(Dataset):
@@ -32,22 +33,33 @@ class CocoDataset(Dataset):
     ) -> None:
         self.image_dir = Path(image_dir)
         self.annot_file = Path(annot_file)
-        self.coco = COCO(self.annot_file)
-        self.image_ids = sorted(self.coco.imgs.keys())
+        self.data = json.loads(self.annot_file.open().read())
+        self.images = {
+            d['id']: d
+            for d
+            in self.data['images']
+        }
+        self.image_ids = list(self.images.keys())
+        self.boxes_map = {
+            k: []
+            for k in self.images.keys()
+        }
+        for annt in self.data['annotations']:
+            val = self.boxes_map[annt['image_id']]
+            val.append(annt['bbox'])
+            self.boxes_map[annt['image_id']] = val
+
         self.mode = mode
         bbox_params = {"format": "coco", "label_fields": ["labels"]}
         self.pre_transforms = albm.Compose(
             [
+                albm.ShiftScaleRotate(rotate_limit=5),
                 albm.LongestMaxSize(max_size=max_size),
                 albm.PadIfNeeded(
                     min_width=max_size,
                     min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
-                # albm.ShiftScaleRotate(rotate_limit=5),
-                # albm.RandomCrop(
-                #     p=1, height=max_size, width=max_size
-                # ),
             ],
             bbox_params=bbox_params,
         )
@@ -57,12 +69,11 @@ class CocoDataset(Dataset):
         image_id = self.image_ids[idx]
         boxes = np.stack(
             [
-                _["bbox"]
-                for _ in sorted(self.coco.imgToAnns[image_id], key=lambda _: _["id"])
+                x for x in self.boxes_map[image_id]
             ]
         )
         areas = boxes[:, 2] * boxes[:, 3]
-        image_path = self.image_dir / self.coco.imgs[image_id]["file_name"]
+        image_path = self.image_dir / self.images[image_id]["file_name"]
         image_name = image_path.stem
         image = (imread(str(image_path)) / 255).astype(np.float32)
         boxes = boxes[areas > 0.0]

@@ -33,21 +33,17 @@ class CodhKuzushijiDataset(Dataset):
         self.annot_file = Path(annot_file)
         with open(annot_file) as fp:
             self.annots = json.load(fp)
+        bbox_params={"format": "coco", "label_fields": ["labels"]}
         self.preprocess = albm.Compose(
             [
                 albm.OneOf(
                     [
-                        albm.ShiftScaleRotate(rotate_limit=10),
-                        RandomLayout(max_size, max_size, (0.5, 1.0)),
+                        albm.ShiftScaleRotate(rotate_limit=5),
+                        albm.LongestMaxSize(max_size=max_size),
                     ]
                 ),
-                albm.PadIfNeeded(
-                    min_width=max_size,
-                    min_height=max_size,
-                    border_mode=cv2.BORDER_CONSTANT,
-                ),
-                albm.RandomResizedCrop(max_size, max_size),
-                albm.ToGray(p=0.2),
+                RandomLayout(max_size, max_size, (0.5, 1.0)),
+                albm.ToGray(p=0.1),
                 albm.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.9
                 ),
@@ -60,7 +56,7 @@ class CodhKuzushijiDataset(Dataset):
                     p=0.5,
                 ),
             ],
-            bbox_params={"format": "coco", "label_fields": ["labels"]},
+            bbox_params=bbox_params,
         )
         self.transforms = transforms
         self.postprocess = albm.Compose([ToTensorV2(),])

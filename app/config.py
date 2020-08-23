@@ -6,7 +6,7 @@ from object_detection.models.centernetv1 import GaussianMapMode
 from object_detection.models.backbones.effnet import Phi
 
 # train
-lr = 1e-3
+lr = 1e-4
 T_max = 16
 eta_min = 1e-6
 
@@ -21,7 +21,7 @@ box_depth = 1
 
 # criterion
 heatmap_weight = 1.0
-box_weight = 10.0
+box_weight = 5.0
 sigma = 5.0
 mode: GaussianMapMode = "aspect"
 
@@ -30,7 +30,7 @@ metric: Tuple[str, Literal["max", "min"]] = ("score", "max")
 iou_thresholds = [0.5]
 
 # to_boxes
-confidence_threshold = 0.6
+confidence_threshold = 0.1
 use_peak = True
 
 seed = 777
