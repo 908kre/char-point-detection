@@ -12,9 +12,11 @@ def test_CocoDataset() -> None:
         annot_file="/store/datasets/hdata/coco_imglab.json",
         max_size=max_size,
     )
-    for i in range(10):
-        id, image, boxes, _ = dataset[0]
+    for i in range(len(dataset)):
+        id, image, boxes, _ = dataset[i]
         _, h, w = image.shape
+        assert h == max_size
+        assert w == max_size
         plot = DetectionPlot(figsize=(10, 10), w=w, h=h)
         plot.with_image(image)
         plot.with_yolo_boxes(boxes)

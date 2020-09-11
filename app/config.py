@@ -12,7 +12,7 @@ eta_min = 1e-6
 
 # model
 effdet_id: Phi = 1
-channels = 64
+channels = 128
 pretrained = True
 out_idx: PyramidIdx = 4
 fpn_depth = 1
@@ -21,8 +21,8 @@ box_depth = 1
 
 # criterion
 heatmap_weight = 1.0
-box_weight = 5.0
-sigma = 5.0
+box_weight = 20.0
+sigma = 20.0
 mode: GaussianMapMode = "aspect"
 
 # metric
@@ -30,7 +30,7 @@ metric: Tuple[str, Literal["max", "min"]] = ("score", "max")
 iou_thresholds = [0.5]
 
 # to_boxes
-confidence_threshold = 0.1
+confidence_threshold = 0.4
 use_peak = True
 
 seed = 777

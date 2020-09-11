@@ -112,7 +112,7 @@ def train() -> None:
         max_size=config.max_size,
     )
     train_loader: Any = DataLoader(
-        ConcatDataset([coco, hcoco]),  # type: ignore
+        ConcatDataset([hcoco, coco]),  # type: ignore
         batch_size=config.batch_size,
         drop_last=True,
         shuffle=True,

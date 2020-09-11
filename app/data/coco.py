@@ -6,6 +6,7 @@ import cv2
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from .common import imread
+from ..transforms import RandomDilateErode, RandomLayout, RandomRuledLines
 from object_detection.entities import (
     CoCoBoxes,
     TrainSample,
@@ -53,13 +54,14 @@ class CocoDataset(Dataset):
         bbox_params = {"format": "coco", "label_fields": ["labels"]}
         self.pre_transforms = albm.Compose(
             [
-                albm.ShiftScaleRotate(rotate_limit=5),
                 albm.LongestMaxSize(max_size=max_size),
                 albm.PadIfNeeded(
                     min_width=max_size,
                     min_height=max_size,
                     border_mode=cv2.BORDER_CONSTANT,
                 ),
+                RandomLayout(max_size, max_size, (0.8, 2.0)),
+                albm.RandomBrightnessContrast(),
             ],
             bbox_params=bbox_params,
         )
