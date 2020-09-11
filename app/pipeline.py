@@ -45,7 +45,6 @@ from app import config
 from torch.utils.data import DataLoader, Subset, ConcatDataset
 from .data.common import imread
 from .data.coco import CocoDataset
-from .data.kuzushiji import CodhKuzushijiDataset
 from .data.negative import NegativeDataset
 
 
@@ -112,12 +111,6 @@ def train() -> None:
         annot_file="/store/datasets/hdata/coco_imglab.json",
         max_size=config.max_size,
     )
-    codh = CodhKuzushijiDataset(
-        image_dir="/store/codh-kuzushiji/resized",
-        annot_file="/store/codh-kuzushiji/resized/annot.json",
-        max_size=config.max_size,
-    )
-    neg = NegativeDataset(image_dir="/store/negative/images", max_size=config.max_size,)
     train_loader: Any = DataLoader(
         ConcatDataset([coco, hcoco]),  # type: ignore
         batch_size=config.batch_size,
